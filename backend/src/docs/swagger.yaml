@@ -1,0 +1,1563 @@
+openapi: 3.0.0
+info:
+  title: Budget Manager API
+  description: API complète pour la gestion de budget, transactions, abonnements et fonctionnalités sociales
+  version: 1.0.0
+  contact:
+    name: Support API
+    email: support@budgetmanager.com
+
+servers:
+  - url: http://localhost:3000/api
+    description: Serveur de développement
+  - url: https://votre-domaine.com/api
+    description: Serveur de production
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "johndoe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        profileImage:
+          type: string
+          example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        bio:
+          type: string
+          example: "Développeur passionné"
+        location:
+          type: string
+          example: "Paris, France"
+        createdAt:
+          type: string
+          format: date-time
+        followersCount:
+          type: integer
+          example: 15
+        followingCount:
+          type: integer
+          example: 8
+        isFollowing:
+          type: boolean
+          example: false
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+        user:
+          $ref: '#/components/schemas/User'
+
+    Budget:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Budget Alimentation"
+        amount:
+          type: number
+          format: float
+          example: 500.00
+        category:
+          type: string
+          example: "food"
+        created_at:
+          type: string
+          format: date-time
+        total_transactions:
+          type: number
+          format: float
+          example: 250.00
+        transaction_count:
+          type: integer
+          example: 5
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        budget_id:
+          type: integer
+          example: 1
+        description:
+          type: string
+          example: "Courses supermarché"
+        amount:
+          type: number
+          format: float
+          example: -45.50
+        category:
+          type: string
+          example: "food"
+        created_at:
+          type: string
+          format: date-time
+        budget_name:
+          type: string
+          example: "Budget Alimentation"
+
+    Subscription:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        label:
+          type: string
+          example: "Netflix"
+        amount:
+          type: number
+          format: float
+          example: 15.99
+        date:
+          type: string
+          format: date
+          example: "2024-01-15"
+        recurrence:
+          type: string
+          enum: ["monthly", "yearly", "weekly"]
+          example: "monthly"
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          example: 4
+        image_url:
+          type: string
+          nullable: true
+          example: "https://res.cloudinary.com/.../netflix.jpg"
+        created_at:
+          type: string
+          format: date-time
+
+    Grocery:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        text:
+          type: string
+          example: "Lait, œufs, pain"
+        is_completed:
+          type: boolean
+          example: false
+        created_at:
+          type: string
+          format: date-time
+
+    Post:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          nullable: true
+          example: "Mon premier post"
+        content:
+          type: string
+          example: "Contenu de mon post..."
+        image:
+          type: string
+          nullable: true
+          example: "https://res.cloudinary.com/.../image.jpg"
+        created_at:
+          type: string
+          format: date-time
+        username:
+          type: string
+          example: "johndoe"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        profile_image:
+          type: string
+          example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
+        likes:
+          type: integer
+          example: 5
+        comments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Comment'
+        userLiked:
+          type: boolean
+          example: true
+
+    Comment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        user_id:
+          type: integer
+          example: 1
+        post_id:
+          type: integer
+          example: 1
+        content:
+          type: string
+          example: "Super post !"
+        created_at:
+          type: string
+          format: date-time
+        username:
+          type: string
+          example: "johndoe"
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        profile_image:
+          type: string
+          example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
+        likes:
+          type: integer
+          example: 2
+        userLiked:
+          type: boolean
+          example: false
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        type:
+          type: string
+          enum: ["follow", "like", "comment"]
+          example: "like"
+        created_at:
+          type: string
+          format: date-time
+        from:
+          type: object
+          properties:
+            username:
+              type: string
+              example: "johndoe"
+            first_name:
+              type: string
+              example: "John"
+            last_name:
+              type: string
+              example: "Doe"
+            profile_image:
+              type: string
+              example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
+        post:
+          type: object
+          nullable: true
+          properties:
+            title:
+              type: string
+              example: "Mon post"
+            content:
+              type: string
+              example: "Contenu du post"
+            image:
+              type: string
+              example: "https://res.cloudinary.com/.../image.jpg"
+        comment:
+          type: object
+          nullable: true
+          properties:
+            content:
+              type: string
+              example: "Super commentaire !"
+
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Error message"
+        error:
+          type: string
+          example: "Detailed error description"
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ===============================
+  # AUTHENTICATION ROUTES
+  # ===============================
+  /auth/register:
+    post:
+      summary: Inscription d'un nouvel utilisateur
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - email
+                - password
+              properties:
+                username:
+                  type: string
+                  minLength: 3
+                  example: "johndoe"
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "password123"
+                first_name:
+                  type: string
+                  example: "John"
+                last_name:
+                  type: string
+                  example: "Doe"
+                bio:
+                  type: string
+                  example: "Développeur passionné"
+                location:
+                  type: string
+                  example: "Paris, France"
+      responses:
+        201:
+          description: Utilisateur créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/login:
+    post:
+      summary: Connexion d'un utilisateur
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "john@example.com"
+                password:
+                  type: string
+                  example: "password123"
+      responses:
+        200:
+          description: Connexion réussie
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        400:
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/profile/{username}:
+    get:
+      summary: Récupérer le profil d'un utilisateur
+      tags: [Authentication]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "johndoe"
+      responses:
+        200:
+          description: Profil utilisateur récupéré
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        404:
+          description: Utilisateur non trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      summary: Récupérer l'utilisateur connecté
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Utilisateur récupéré avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        401:
+          description: Non authentifié
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/profile:
+    put:
+      summary: Mettre à jour le profil utilisateur
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: "newusername"
+                email:
+                  type: string
+                  format: email
+                  example: "newemail@example.com"
+                first_name:
+                  type: string
+                  example: "New First Name"
+                last_name:
+                  type: string
+                  example: "New Last Name"
+                bio:
+                  type: string
+                  example: "New bio"
+                location:
+                  type: string
+                  example: "New location"
+                profile_image:
+                  type: string
+                  example: "https://new-image-url.com"
+      responses:
+        200:
+          description: Profil mis à jour avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+        400:
+          description: Données invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/follow/{targetUserId}:
+    post:
+      summary: Suivre ou ne plus suivre un utilisateur
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: targetUserId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 2
+      responses:
+        200:
+          description: Action réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "User followed successfully"
+        400:
+          description: Impossible de se suivre soi-même
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/profile-images:
+    get:
+      summary: Récupérer toutes les images de profil
+      tags: [Authentication]
+      responses:
+        200:
+          description: Liste des images de profil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        username:
+                          type: string
+                        profileImage:
+                          type: string
+
+  # ===============================
+  # BUDGET ROUTES
+  # ===============================
+  /budgets:
+    post:
+      summary: Créer un nouveau budget
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - amount
+                - category
+              properties:
+                name:
+                  type: string
+                  example: "Budget Alimentation"
+                amount:
+                  type: number
+                  format: float
+                  example: 500.00
+                category:
+                  type: string
+                  example: "food"
+      responses:
+        201:
+          description: Budget créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  budget:
+                    $ref: '#/components/schemas/Budget'
+
+    get:
+      summary: Récupérer tous les budgets de l'utilisateur
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Liste des budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Budget'
+
+  /budgets/user-budgets:
+    get:
+      summary: Récupérer les budgets de l'utilisateur avec détails
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Budgets récupérés avec succès
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Budget'
+
+  /budgets/{budgetId}:
+    delete:
+      summary: Supprimer un budget
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Budget supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /budgets/reached:
+    get:
+      summary: Récupérer le nombre de budgets atteints
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Statistiques des budgets atteints
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "3/5"
+
+  /budgets/data:
+    get:
+      summary: Récupérer les données budgétaires de l'utilisateur
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Données budgétaires
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    total_budget_amount:
+                      type: number
+                    total_transactions_amount:
+                      type: number
+                    category:
+                      type: string
+
+  /budgets/last:
+    get:
+      summary: Récupérer les 3 derniers budgets
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Derniers budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Budget'
+
+  /budgets/all-summaries:
+    get:
+      summary: Récupérer le résumé complet de tous les budgets
+      tags: [Budgets]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Résumé des budgets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    budget_id:
+                      type: integer
+                    budget_name:
+                      type: string
+                    transaction_count:
+                      type: integer
+                    total_spent:
+                      type: number
+                    budget_total:
+                      type: number
+                    remaining_amount:
+                      type: number
+                    percentage_used:
+                      type: number
+                    display:
+                      type: object
+
+  # ===============================
+  # TRANSACTION ROUTES
+  # ===============================
+  /transactions:
+    post:
+      summary: Créer une nouvelle transaction
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - budget_id
+                - amount
+                - description
+                - category
+              properties:
+                budget_id:
+                  type: integer
+                  example: 1
+                amount:
+                  type: number
+                  format: float
+                  example: -45.50
+                description:
+                  type: string
+                  example: "Courses supermarché"
+                category:
+                  type: string
+                  example: "food"
+      responses:
+        201:
+          description: Transaction créée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
+
+    get:
+      summary: Récupérer les transactions de l'utilisateur
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Liste des transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /transactions/my-transactions:
+    get:
+      summary: Récupérer les transactions personnelles
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Transactions récupérées
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /transactions/budget/{budgetId}:
+    get:
+      summary: Récupérer les transactions d'un budget spécifique
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: budgetId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Transactions du budget
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /transactions/{transactionId}:
+    delete:
+      summary: Supprimer une transaction
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: transactionId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Transaction supprimée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /transactions/period/{period}:
+    get:
+      summary: Récupérer les transactions par période
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [last7, last30, last90, last365]
+          example: "last30"
+      responses:
+        200:
+          description: Transactions de la période
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /transactions/total-amount:
+    get:
+      summary: Récupérer le montant total des transactions
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Montant total
+          content:
+            application/json:
+              schema:
+                type: number
+                example: 1250.75
+
+  /transactions/total-count:
+    get:
+      summary: Récupérer le nombre total de transactions
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Nombre de transactions
+          content:
+            application/json:
+              schema:
+                type: integer
+                example: 25
+
+  /transactions/last:
+    get:
+      summary: Récupérer les 10 dernières transactions
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Dernières transactions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+
+  /transactions/summary:
+    get:
+      summary: Récupérer le résumé financier
+      tags: [Transactions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Résumé financier
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    example: 1500.25
+                  income:
+                    type: number
+                    example: 2000.00
+                  expenses:
+                    type: number
+                    example: 499.75
+
+  # ===============================
+  # SUBSCRIPTION ROUTES
+  # ===============================
+  /subscriptions:
+    get:
+      summary: Récupérer tous les abonnements de l'utilisateur
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Liste des abonnements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Subscription'
+
+    post:
+      summary: Créer un nouvel abonnement
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - label
+                - amount
+                - date
+                - recurrence
+                - rating
+              properties:
+                label:
+                  type: string
+                  example: "Netflix"
+                amount:
+                  type: number
+                  format: float
+                  example: 15.99
+                date:
+                  type: string
+                  format: date
+                  example: "2024-01-15"
+                recurrence:
+                  type: string
+                  enum: ["monthly", "yearly", "weekly"]
+                  example: "monthly"
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+                image:
+                  type: string
+                  nullable: true
+                  example: "data:image/jpeg;base64,..."
+      responses:
+        201:
+          description: Abonnement créé avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+
+  /subscriptions/{id}:
+    delete:
+      summary: Supprimer un abonnement
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Abonnement supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  deletedId:
+                    type: integer
+
+  /subscriptions/summary:
+    get:
+      summary: Récupérer le résumé des abonnements
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Résumé des abonnements
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: number
+                    example: 45.97
+                  count:
+                    type: integer
+                    example: 3
+
+  # ===============================
+  # GROCERY ROUTES
+  # ===============================
+  /groceries:
+    get:
+      summary: Récupérer tous les articles de course
+      tags: [Groceries]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Liste des articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grocery'
+
+    post:
+      summary: Ajouter un nouvel article de course
+      tags: [Groceries]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  example: "Lait, œufs, pain"
+      responses:
+        201:
+          description: Article ajouté avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grocery'
+
+    delete:
+      summary: Supprimer tous les articles de course
+      tags: [Groceries]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Tous les articles supprimés
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  deletedCount:
+                    type: integer
+
+  /groceries/{id}:
+    put:
+      summary: Modifier un article de course
+      tags: [Groceries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - text
+              properties:
+                text:
+                  type: string
+                  example: "Lait demi-écrémé"
+      responses:
+        200:
+          description: Article modifié avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grocery'
+
+    delete:
+      summary: Supprimer un article de course
+      tags: [Groceries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Article supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  deletedId:
+                    type: integer
+
+  /groceries/{id}/toggle:
+    patch:
+      summary: Basculer l'état de complétion d'un article
+      tags: [Groceries]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: État modifié avec succès
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grocery'
+
+  /groceries/summary:
+    get:
+      summary: Récupérer le résumé des courses
+      tags: [Groceries]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Résumé des courses
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total:
+                    type: integer
+                    example: 10
+                  completed:
+                    type: integer
+                    example: 3
+
+  # ===============================
+  # POST ROUTES
+  # ===============================
+  /posts:
+    get:
+      summary: Récupérer tous les posts
+      tags: [Posts]
+      responses:
+        200:
+          description: Liste des posts
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+
+    post:
+      summary: Créer un nouveau post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  example: "Mon premier post"
+                content:
+                  type: string
+                  example: "Contenu de mon post..."
+                image:
+                  type: string
+                  format: binary
+      responses:
+        201:
+          description: Post créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  post:
+                    $ref: '#/components/schemas/Post'
+
+  /posts/{postId}:
+    get:
+      summary: Récupérer un post spécifique
+      tags: [Posts]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Détails du post
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  post:
+                    $ref: '#/components/schemas/Post'
+
+    delete:
+      summary: Supprimer un post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Post supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  /posts/user/{username}:
+    get:
+      summary: Récupérer les posts d'un utilisateur
+      tags: [Posts]
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema:
+            type: string
+          example: "johndoe"
+      responses:
+        200:
+          description: Posts de l'utilisateur
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  posts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Post'
+
+  /posts/{postId}/like:
+    post:
+      summary: Aimer ou ne plus aimer un post
+      tags: [Posts]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Action réussie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # ===============================
+  # COMMENT ROUTES
+  # ===============================
+  /comments/post/{postId}:
+    get:
+      summary: Récupérer les commentaires d'un post
+      tags: [Comments]
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Liste des commentaires
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Comment'
+
+    post:
+      summary: Créer un nouveau commentaire
+      tags: [Comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - content
+              properties:
+                content:
+                  type: string
+                  example: "Super post !"
+      responses:
+        201:
+          description: Commentaire créé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  comment:
+                    $ref: '#/components/schemas/Comment'
+
+  /comments/{commentId}:
+    delete:
+      summary: Supprimer un commentaire
+      tags: [Comments]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Commentaire supprimé avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # ===============================
+  # NOTIFICATION ROUTES
+  # ===============================
+  /notifications:
+    get:
+      summary: Récupérer les notifications de l'utilisateur
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      responses:
+        200:
+          description: Liste des notifications
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Notification'
+
+  /notifications/{notificationId}:
+    delete:
+      summary: Supprimer une notification
+      tags: [Notifications]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: Notification supprimée avec succès
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+
+  # ===============================
+  # HEALTH ROUTE
+  # ===============================
+  /health:
+    get:
+      summary: Vérifier l'état du serveur
+      tags: [Health]
+      responses:
+        200:
+          description: Serveur fonctionne correctement
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "OK"
+                  message:
+                    type: string
+                    example: "Serveur fonctionne"
