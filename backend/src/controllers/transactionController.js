@@ -1,11 +1,21 @@
 import { sql } from "../config/db.js";
 
+// 💸 Création d'une transaction
 export const createTransaction = async (req, res) => {
-  const { budget_id, amount, description, category } = req.body;
+  const { budget_id, amount, description } = req.body;
   const user_id = req.user.id;
 
+  // Validation des champs requis
+  if (!budget_id || !amount || !description) {
+    return res.status(400).json({ error: 'Tous les champs sont requis (budget_id, montant, description).' });
+  }
+
+  if (isNaN(amount) || parseFloat(amount) <= 0) {
+    return res.status(400).json({ error: 'Le montant doit être un nombre positif.' });
+  }
+
   try {
-    // Vérifier que le budget appartient à l'utilisateur
+    // Récupérer le budget et ses transactions
     const budgetResult = await sql`
       SELECT b.*, 
         COALESCE(SUM(t.amount), 0) as total_transactions
@@ -14,34 +24,44 @@ export const createTransaction = async (req, res) => {
       WHERE b.id = ${budget_id} AND b.user_id = ${user_id}
       GROUP BY b.id
     `;
+
     if (budgetResult.length === 0) {
-      return res.status(404).json({ error: 'Budget non trouvé' });
+      return res.status(404).json({ error: 'Budget introuvable.' });
     }
 
     const budget = budgetResult[0];
     const totalWithNewTransaction = parseFloat(budget.total_transactions) + parseFloat(amount);
 
+    // Vérifier si le montant dépasse le budget alloué
     if (totalWithNewTransaction > budget.amount) {
-      return res.status(400).json({ error: 'Le montant dépasse le budget' });
+      return res.status(400).json({ 
+        error: 'Le montant de la transaction dépasse le budget disponible.',
+        details: {
+          reste_budget: (budget.amount - budget.total_transactions).toFixed(2),
+          montant_saisi: amount
+        }
+      });
     }
 
-    // Créer la transaction
+    // Créer la transaction en utilisant la catégorie du budget
     const newTransaction = await sql`
       INSERT INTO transactions (user_id, budget_id, description, amount, category) 
-      VALUES (${user_id}, ${budget_id}, ${description}, ${amount}, ${category})
+      VALUES (${user_id}, ${budget_id}, ${description}, ${amount}, ${budget.category})
       RETURNING *
     `;
 
     res.status(201).json({
-      message: "Transaction created successfully",
+      message: "Transaction créée avec succès.",
       transaction: newTransaction[0]
     });
+
   } catch (error) {
-    console.error('Erreur création transaction:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors de la création de la transaction :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur lors de la création de la transaction.' });
   }
 };
 
+// 📋 Récupération de toutes les transactions de l’utilisateur
 export async function getMyTransactions(req, res) {
   try {
     const user_id = req.user.id;
@@ -54,26 +74,30 @@ export async function getMyTransactions(req, res) {
       ORDER BY t.created_at DESC
     `;
 
-    res.status(200).json(transactions);
+    res.status(200).json({
+      message: "Transactions récupérées avec succès.",
+      transactions
+    });
 
   } catch (error) {
-    console.log('Error fetching transactions:', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('❌ Erreur lors de la récupération des transactions :', error);
+    res.status(500).json({ message: 'Erreur interne du serveur.' });
   }
 }
 
+// 📊 Récupération des transactions associées à un budget spécifique
 export const getBudgetTransactions = async (req, res) => {
   const { budgetId } = req.params;
   const user_id = req.user.id;
 
   try {
-    // Vérifier que le budget appartient à l'utilisateur
+    // Vérifier que le budget appartient bien à l’utilisateur
     const budgetCheck = await sql`
       SELECT id FROM budgets WHERE id = ${budgetId} AND user_id = ${user_id}
     `;
     
     if (budgetCheck.length === 0) {
-      return res.status(404).json({ error: 'Budget non trouvé ou non autorisé' });
+      return res.status(404).json({ error: 'Budget introuvable ou accès non autorisé.' });
     }
 
     const transactions = await sql`
@@ -82,19 +106,24 @@ export const getBudgetTransactions = async (req, res) => {
       ORDER BY created_at DESC
     `;
 
-    res.json(transactions);
+    res.status(200).json({
+      message: "Transactions du budget récupérées avec succès.",
+      transactions
+    });
+
   } catch (error) {
-    console.error('Erreur récupération transactions:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors de la récupération des transactions :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
 
+// 🗑️ Suppression d’une transaction
 export const deleteTransaction = async (req, res) => {
   const { transactionId } = req.params;
   const user_id = req.user.id;
 
   try {
-    // Vérifier que la transaction appartient à l'utilisateur
+    // Vérifier que la transaction appartient à l’utilisateur
     const transactionCheck = await sql`
       SELECT t.id 
       FROM transactions t
@@ -103,109 +132,23 @@ export const deleteTransaction = async (req, res) => {
     `;
     
     if (transactionCheck.length === 0) {
-      return res.status(404).json({ error: 'Transaction non trouvée ou non autorisée' });
+      return res.status(404).json({ error: 'Transaction introuvable ou accès non autorisé.' });
     }
 
     await sql`DELETE FROM transactions WHERE id = ${transactionId}`;
 
-    res.status(200).json({message: "Transaction deleted successfully"});
+    res.status(200).json({ message: "Transaction supprimée avec succès." });
   } catch (error) {
-    console.error('Erreur suppression transaction:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors de la suppression de la transaction :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
 
-export const getTransactionsByPeriod = async (req, res) => {
-  const { period } = req.params;
-  const user_id = req.user.id;
-
-  try {
-    let dateLimit = new Date();
-    switch (period) {
-      case 'last7': dateLimit.setDate(dateLimit.getDate() - 7); break;
-      case 'last30': dateLimit.setDate(dateLimit.getDate() - 30); break;
-      case 'last90': dateLimit.setDate(dateLimit.getDate() - 90); break;
-      case 'last365': dateLimit.setFullYear(dateLimit.getFullYear() - 1); break;
-      default: return res.status(400).json({ error: 'Période invalide. Utiliser: last7, last30, last90, last365' });
-    }
-
-    const transactions = await sql`
-      SELECT t.*, b.name as budget_name, b.user_id
-      FROM transactions t
-      JOIN budgets b ON t.budget_id = b.id
-      WHERE b.user_id = ${user_id}
-      AND t.created_at >= ${dateLimit.toISOString()}
-      ORDER BY t.created_at DESC
-    `;
-
-    res.json(transactions);
-  } catch (error) {
-    console.error('Erreur transactions par période:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
-export const getTotalAmount = async (req, res) => {
-  const user_id = req.user.id;
-
-  try {
-    const totalResult = await sql`
-      SELECT COALESCE(SUM(t.amount), 0) as total
-      FROM transactions t
-      JOIN budgets b ON t.budget_id = b.id
-      WHERE b.user_id = ${user_id}
-    `;
-
-    res.json(parseFloat(totalResult[0].total));
-  } catch (error) {
-    console.error('Erreur montant total:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
-export const getTotalCount = async (req, res) => {
-  const user_id = req.user.id;
-
-  try {
-    const countResult = await sql`
-      SELECT COUNT(*) as count
-      FROM transactions t
-      JOIN budgets b ON t.budget_id = b.id
-      WHERE b.user_id = ${user_id}
-    `;
-
-    res.json(parseInt(countResult[0].count));
-  } catch (error) {
-    console.error('Erreur comptage transactions:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
-export const getLastTransactions = async (req, res) => {
-  const user_id = req.user.id;
-
-  try {
-    const transactions = await sql`
-      SELECT t.*, b.name as budget_name
-      FROM transactions t
-      JOIN budgets b ON t.budget_id = b.id
-      WHERE b.user_id = ${user_id}
-      ORDER BY t.created_at DESC
-      LIMIT 10
-    `;
-
-    res.json(transactions);
-  } catch (error) {
-    console.error('Erreur dernières transactions:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
+// 📈 Résumé global des transactions de l’utilisateur
 export async function getSummary(req, res) {
   try {
-    const user_id = req.user.id; // Récupéré du middleware d'authentification
+    const user_id = req.user.id;
 
-    // Récupérer le solde total (somme de tous les montants de transactions)
     const balanceResult = await sql`
       SELECT COALESCE(SUM(t.amount), 0) as balance 
       FROM transactions t
@@ -213,7 +156,6 @@ export async function getSummary(req, res) {
       WHERE b.user_id = ${user_id}
     `;
 
-    // Récupérer les revenus (transactions positives)
     const incomeResult = await sql`
       SELECT COALESCE(SUM(t.amount), 0) as income 
       FROM transactions t
@@ -221,7 +163,6 @@ export async function getSummary(req, res) {
       WHERE b.user_id = ${user_id} AND t.amount > 0
     `;
 
-    // Récupérer les dépenses (transactions négatives, converties en positif)
     const expensesResult = await sql`
       SELECT COALESCE(ABS(SUM(t.amount)), 0) as expenses 
       FROM transactions t
@@ -230,13 +171,14 @@ export async function getSummary(req, res) {
     `;
 
     res.status(200).json({
-      balance: parseFloat(balanceResult[0].balance),
-      income: parseFloat(incomeResult[0].income),
-      expenses: parseFloat(expensesResult[0].expenses)
+      message: "Résumé financier récupéré avec succès.",
+      solde: parseFloat(balanceResult[0].balance),
+      revenus: parseFloat(incomeResult[0].income),
+      depenses: parseFloat(expensesResult[0].expenses)
     });
 
   } catch (error) {
-    console.log('Error fetching summary', error);
-    res.status(500).json({ message: 'Internal server error' });
+    console.error('❌ Erreur lors de la récupération du résumé financier :', error);
+    res.status(500).json({ message: 'Erreur interne du serveur.' });
   }
 }

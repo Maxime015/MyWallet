@@ -5,52 +5,48 @@ import cloudinary from "../config/cloudinary.js";
 const validateSubscriptionData = (data) => {
   const errors = [];
   
-  if (!data.label?.trim()) errors.push('Label is required');
+  if (!data.label?.trim()) errors.push('Le libellé est requis');
   
   const amount = parseFloat(data.amount);
-  if (isNaN(amount) || amount <= 0) errors.push('Amount must be a positive number');
+  if (isNaN(amount) || amount <= 0) errors.push('Le montant doit être un nombre positif');
   
-  if (!data.date || !Date.parse(data.date)) {
-    errors.push('Invalid date format (YYYY-MM-DD required)');
-  }
+  if (!Date.parse(data.date)) errors.push('Format de date invalide (YYYY-MM-DD requis)');
   
   const validRecurrences = ["monthly", "yearly", "weekly"];
   if (!validRecurrences.includes(data.recurrence)) {
-    errors.push(`Recurrence must be one of: ${validRecurrences.join(', ')}`);
+    errors.push(`La récurrence doit être l'une des valeurs suivantes : ${validRecurrences.join(', ')}`);
   }
   
   const rating = parseInt(data.rating);
   if (isNaN(rating) || rating < 1 || rating > 5) {
-    errors.push('Rating must be an integer between 1 and 5');
+    errors.push('La note doit être un entier entre 1 et 5');
   }
+
+  console.error('Erreurs de validation :', errors);
   
   return errors.length > 0 ? errors : null;
 };
 
-// ✅ AMÉLIORATION : Meilleure gestion d'erreur Cloudinary
+// Upload une image sur Cloudinary
 const uploadImageToCloudinary = async (imageDataUrl) => {
   try {
     if (!imageDataUrl) return null;
     
-    const result = await cloudinary.uploader.upload(imageDataUrl, {
-      folder: 'subscriptions',
-      resource_type: 'image',
-      overwrite: true
-    });
+    const base64Data = imageDataUrl.replace(/^data:image\/\w+;base64,/, '');
+    
+    const result = await cloudinary.uploader.upload(
+      `data:image/jpeg;base64,${base64Data}`,
+      {
+        folder: 'subscriptions',
+        resource_type: 'image',
+        overwrite: true
+      }
+    );
 
-    console.log("✅ Image uploaded successfully to Cloudinary");
     return result.secure_url;
   } catch (error) {
-    console.error('❌ Cloudinary upload error:', error.message);
-    
-    // Gestion spécifique des erreurs Cloudinary
-    if (error.http_code === 400) {
-      throw new Error('Invalid image format or corrupted image data');
-    } else if (error.http_code === 413) {
-      throw new Error('Image file too large');
-    } else {
-      throw new Error('Image upload service temporarily unavailable');
-    }
+    console.error('Erreur Cloudinary lors du téléchargement :', error);
+    throw new Error('Échec du téléchargement de l\'image');
   }
 };
 
@@ -59,21 +55,20 @@ const deleteImageFromCloudinary = async (imageUrl) => {
   try {
     if (!imageUrl) return;
     
-    // Extraire le public_id de l'URL Cloudinary
     const publicId = imageUrl.split('/').pop().split('.')[0];
     const fullPublicId = `subscriptions/${publicId}`;
     
     await cloudinary.uploader.destroy(fullPublicId);
   } catch (error) {
-    console.error('Cloudinary delete error:', error);
-    throw new Error('Failed to delete image');
+    console.error('Erreur Cloudinary lors de la suppression :', error);
+    throw new Error('Échec de la suppression de l\'image');
   }
 };
 
-// Récupère les abonnements de l'utilisateur authentifié
-export async function getSubscriptions(req, res) {
+// Récupère les abonnements de l'utilisateur connecté
+export async function getSubscriptionByUserId(req, res) {
   try {
-    const user_id = req.user.id;
+    const userId = req.user.id; // Récupéré du middleware d'authentification
 
     const subscriptions = await sql`
       SELECT 
@@ -87,33 +82,33 @@ export async function getSubscriptions(req, res) {
         image_url,
         created_at
       FROM subscriptions 
-      WHERE user_id = ${user_id} 
+      WHERE user_id = ${userId} 
       ORDER BY created_at DESC`;
 
     res.status(200).json(subscriptions);
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Erreur :', error);
     res.status(500).json({ 
-      message: 'Internal server error',
+      message: 'Erreur interne du serveur',
       ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
 
-// Crée un nouvel abonnement pour l'utilisateur authentifié
+// Crée un nouvel abonnement pour l'utilisateur connecté
 export async function createSubscription(req, res) {
   try {
     const errors = validateSubscriptionData(req.body);
     if (errors) {
       return res.status(400).json({ 
-        message: 'Validation failed',
+        message: 'Échec de la validation',
         errors 
       });
     }
 
     const { label, amount, date, recurrence, image, rating } = req.body;
-    const user_id = req.user.id; // Récupéré du middleware d'authentification
+    const userId = req.user.id; // Récupéré du middleware d'authentification
     const amountNum = parseFloat(amount).toFixed(2);
     const ratingInt = parseInt(rating);
 
@@ -127,7 +122,7 @@ export async function createSubscription(req, res) {
       INSERT INTO subscriptions 
         (user_id, label, amount, date, recurrence, rating, image_url) 
       VALUES 
-        (${user_id}, ${label.trim()}, ${amountNum}, ${date}::date, ${recurrence}, ${ratingInt}, ${imageUrl || null})
+        (${userId}, ${label.trim()}, ${amountNum}, ${date}::date, ${recurrence}, ${ratingInt}, ${imageUrl || null})
       RETURNING 
         id,
         user_id,
@@ -139,33 +134,36 @@ export async function createSubscription(req, res) {
         image_url,
         created_at`; 
 
-    res.status(201).json(subscription);
+    res.status(201).json({
+      message: 'Abonnement créé avec succès',
+      subscription
+    });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Erreur :', error);
     res.status(500).json({
-      message: error.message || 'Failed to create subscription',
+      message: error.message || 'Échec de la création de l\'abonnement',
       ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
 
-// Supprime un abonnement (vérifie qu'il appartient à l'utilisateur)
+// Supprime un abonnement (vérifie que l'utilisateur est propriétaire)
 export async function deleteSubscription(req, res) {
   try {
     const { id } = req.params;
-    const user_id = req.user.id;
+    const userId = req.user.id; // Récupéré du middleware d'authentification
 
     if (isNaN(id) || parseInt(id) <= 0) {
-      return res.status(400).json({ message: 'Invalid subscription ID' });
+      return res.status(400).json({ message: 'ID d\'abonnement invalide' });
     }
 
-    // Récupérer l'abonnement pour vérifier l'appartenance et avoir l'URL de l'image
+    // Récupérer l'abonnement avec vérification du propriétaire
     const [subscription] = await sql`
-      SELECT image_url FROM subscriptions WHERE id = ${id} AND user_id = ${user_id}`;
+      SELECT image_url FROM subscriptions WHERE id = ${id} AND user_id = ${userId}`;
 
     if (!subscription) {
-      return res.status(404).json({ message: 'Subscription not found or access denied' });
+      return res.status(404).json({ message: 'Abonnement non trouvé' });
     }
 
     // Supprimer l'image de Cloudinary si elle existe
@@ -173,51 +171,52 @@ export async function deleteSubscription(req, res) {
       await deleteImageFromCloudinary(subscription.image_url);
     }
 
-    // Supprimer l'abonnement de la base de données
+    // Supprimer l'abonnement avec vérification du propriétaire
     const [deleted] = await sql`
       DELETE FROM subscriptions 
-      WHERE id = ${id} AND user_id = ${user_id}
+      WHERE id = ${id} AND user_id = ${userId}
       RETURNING *`;
 
     if (!deleted) {
-      return res.status(404).json({ message: 'Subscription not found' });
+      return res.status(404).json({ message: 'Abonnement non trouvé' });
     }
 
     res.status(200).json({ 
-      message: 'Deleted subscription successfully',
+      message: 'Abonnement supprimé avec succès',
       deletedId: deleted.id
     });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Erreur :', error);
     res.status(500).json({ 
-      message: error.message || 'Internal server error',
+      message: error.message || 'Erreur interne du serveur',
       ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }
 };
 
-// Total Montant Abonnement et Nombre Abonnement pour l'utilisateur authentifié
-export async function getSummary(req, res) {
+// Total Montant Abonnement et Nombre Abonnement pour l'utilisateur connecté
+export async function getSummaryByUserId(req, res) {
   try {
-    const user_id = req.user.id;
+    const userId = req.user.id; // Récupéré du middleware d'authentification
 
     const [result] = await sql`
       SELECT 
         COALESCE(SUM(amount), 0)::float as total,
         COUNT(*)::int as count
       FROM subscriptions 
-      WHERE user_id = ${user_id}`;
+      WHERE user_id = ${userId}`;
 
     res.status(200).json({
+      message: 'Récupération du résumé réussie',
       total: result.total || 0,
       count: result.count || 0
     });
 
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Erreur :', error);
     res.status(500).json({ 
-      message: 'Internal server error',
+      message: 'Erreur interne du serveur',
       ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }

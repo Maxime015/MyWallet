@@ -6,13 +6,13 @@ const rateLimiter = async (req, res, next) => {
 
     if (!success) {
       return res.status(429).json({
-        message: "Too many requests, please try again later.",
+        message: "Trop de requêtes, veuillez réessayer plus tard.",
       });
     }
 
     next();
   } catch (error) {
-    console.log("Rate limit error", error);
+    console.log("Erreur de limitation de requêtes :", error);
     next(error);
   }
 };

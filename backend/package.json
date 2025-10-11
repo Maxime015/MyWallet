@@ -12,6 +12,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@arcjet/inspect": "^1.0.0-beta.13",
+    "@arcjet/node": "^1.0.0-beta.13",
     "@clerk/clerk-expo": "^2.16.0",
     "@neondatabase/serverless": "^1.0.0",
     "@upstash/rag-chat": "^2.0.3",

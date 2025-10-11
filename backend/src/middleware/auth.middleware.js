@@ -1,20 +1,19 @@
 import jwt from "jsonwebtoken";
 import { sql } from "../config/db.js";
 
-
 const protectRoute = async (req, res, next) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
-    if (!token) return res.status(401).json({ message: "No authentication token, access denied" });
+    if (!token) return res.status(401).json({ message: "Aucun jeton d'authentification, accès refusé" });
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
     const users = await sql`
-      SELECT id, username, email, profile_image, first_name, last_name, bio, location, created_at 
+      SELECT id, username, email, profile_image, created_at 
       FROM users WHERE id = ${decoded.userId}
     `;
     
-    if (users.length === 0) return res.status(401).json({ message: "Token is not valid" });
+    if (users.length === 0) return res.status(401).json({ message: "Le jeton n'est pas valide" });
 
     const user = users[0];
     req.user = {
@@ -22,23 +21,19 @@ const protectRoute = async (req, res, next) => {
       username: user.username,
       email: user.email,
       profileImage: user.profile_image,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      bio: user.bio,           
-      location: user.location, 
       createdAt: user.created_at,
     };
     
     next();
   } catch (error) {
       if (error.name === 'TokenExpiredError') {
-        return res.status(401).json({ message: "Token expired" });
+        return res.status(401).json({ message: "Le jeton a expiré" });
       }
       if (error.name === 'JsonWebTokenError') {
-        return res.status(401).json({ message: "Invalid token" });
+        return res.status(401).json({ message: "Jeton invalide" });
       }
-      console.error("Authentication error:", error.message);
-      res.status(401).json({ message: "Token is not valid" });
+      console.error("Erreur d'authentification :", error.message);
+      res.status(401).json({ message: "Le jeton n'est pas valide" });
     }
 };
 

@@ -1,19 +1,20 @@
 import { sql } from "../config/db.js";
 
+// 🧾 Création d’un nouveau budget
 export const createBudget = async (req, res) => {
   const { name, amount, category } = req.body;
   const user_id = req.user.id;
 
-  // Validation
+  // Validation des champs
   if (!name || !amount || !category) {
-    return res.status(400).json({ error: 'Tous les champs sont requis' });
+    return res.status(400).json({ error: 'Tous les champs sont requis.' });
   }
 
   if (isNaN(amount) || parseFloat(amount) <= 0) {
-    return res.status(400).json({ error: 'Le montant doit être un nombre positif' });
+    return res.status(400).json({ error: 'Le montant doit être un nombre positif.' });
   }
 
-  // Convertir explicitement
+  // Conversion explicite du montant en nombre à deux décimales
   const amountNum = parseFloat(amount).toFixed(2);
   
   try {
@@ -24,61 +25,41 @@ export const createBudget = async (req, res) => {
     `;
 
     res.status(201).json({
-      message: "Budget created successfully",
+      message: "Budget créé avec succès.",
       budget: newBudget[0]
     });
 
   } catch (error) {
-    console.error('Erreur création budget:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors de la création du budget :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
 
-export const getUserBudgets = async (req, res) => {
-  const user_id = req.user.id; // Récupéré du token
-
-  try {
-    const budgets = await sql`
-      SELECT b.*, 
-        COALESCE(SUM(t.amount), 0) as total_transactions,
-        COUNT(t.id) as transaction_count
-      FROM budgets b
-      LEFT JOIN transactions t ON t.budget_id = b.id
-      WHERE b.user_id = ${user_id}
-      GROUP BY b.id
-      ORDER BY b.created_at DESC
-    `;
-
-    res.json(budgets);
-  } catch (error) {
-    console.error('Erreur récupération budgets:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
+// 🗑️ Suppression d’un budget existant
 export const deleteBudget = async (req, res) => {
   const { budgetId } = req.params;
   const user_id = req.user.id;
 
   try {
-    // Vérifier que le budget appartient à l'utilisateur avant suppression
+    // Vérifier que le budget appartient bien à l’utilisateur
     const budgetCheck = await sql`
       SELECT id FROM budgets WHERE id = ${budgetId} AND user_id = ${user_id}
     `;
     
     if (budgetCheck.length === 0) {
-      return res.status(404).json({ error: 'Budget non trouvé ou non autorisé' });
+      return res.status(404).json({ error: 'Budget introuvable ou accès non autorisé.' });
     }
 
     await sql`DELETE FROM budgets WHERE id = ${budgetId}`;
     
-    res.status(200).json({ message: "Budget deleted successfully" });
+    res.status(200).json({ message: "Budget supprimé avec succès." });
   } catch (error) {
-    console.error('Erreur suppression budget:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors de la suppression du budget :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
 
+// 📈 Récupération du nombre de budgets atteints
 export const getReachedBudgets = async (req, res) => {
   const user_id = req.user.id;
 
@@ -97,58 +78,14 @@ export const getReachedBudgets = async (req, res) => {
       parseFloat(budget.total_transactions) >= parseFloat(budget.amount)
     ).length;
 
-    res.json(`${reachedBudgets}/${totalBudgets}`);
+    res.json({ message: `Budgets atteints : ${reachedBudgets}/${totalBudgets}` });
   } catch (error) {
-    console.error('Erreur calcul budgets atteints:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors du calcul des budgets atteints :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };
 
-export const getUserBudgetData = async (req, res) => {
-  const user_id = req.user.id;
-
-  try {
-    const data = await sql`
-      SELECT 
-        b.name,
-        b.amount as total_budget_amount,
-        COALESCE(SUM(t.amount), 0) as total_transactions_amount,
-        b.category
-      FROM budgets b
-      LEFT JOIN transactions t ON t.budget_id = b.id
-      WHERE b.user_id = ${user_id}
-      GROUP BY b.id, b.name, b.amount, b.category
-    `;
-
-    res.json(data);
-  } catch (error) {
-    console.error('Erreur données budgétaires:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
-export const getLastBudgets = async (req, res) => {
-  const user_id = req.user.id;
-
-  try {
-    const budgets = await sql`
-      SELECT b.*,
-        COALESCE(SUM(t.amount), 0) as total_transactions
-      FROM budgets b
-      LEFT JOIN transactions t ON t.budget_id = b.id
-      WHERE b.user_id = ${user_id}
-      GROUP BY b.id
-      ORDER BY b.created_at DESC
-      LIMIT 3
-    `;
-
-    res.json(budgets);
-  } catch (error) {
-    console.error('Erreur derniers budgets:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
-  }
-};
-
+// 📊 Récupération du résumé de tous les budgets de l’utilisateur
 export const getAllBudgetsSummary = async (req, res) => {
   const user_id = req.user.id;
 
@@ -186,14 +123,17 @@ export const getAllBudgetsSummary = async (req, res) => {
         title: budget.name,
         transaction_count: `${budget.transaction_count} transaction(s)`,
         amounts: `${parseFloat(budget.total_spent).toFixed(0)} € / ${parseFloat(budget.budget_total).toFixed(0)} €`,
-        spent: `${parseFloat(budget.total_spent).toFixed(0)} € dépensés`,
-        remaining: `${parseFloat(budget.remaining_amount).toFixed(0)} € restants`
+        spent: `${parseFloat(budget.total_spent).toFixed(0)} € dépensé(s)`,
+        remaining: `${parseFloat(budget.remaining_amount).toFixed(0)} € restant(s)`
       }
     }));
 
-    res.json(formattedResponse);
+    res.status(200).json({
+      message: "Résumé des budgets récupéré avec succès.",
+      budgets: formattedResponse
+    });
   } catch (error) {
-    console.error('Erreur récupération résumé tous les budgets:', error);
-    res.status(500).json({ error: 'Erreur serveur' });
+    console.error('❌ Erreur lors de la récupération du résumé des budgets :', error);
+    res.status(500).json({ error: 'Erreur interne du serveur.' });
   }
 };

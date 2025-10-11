@@ -1,29 +1,37 @@
 import cron from "cron";
 import https from "https";
 
+// Création d'une tâche planifiée (Cron Job)
+// Cette tâche envoie une requête GET à l’API toutes les 14 minutes
 const job = new cron.CronJob("*/14 * * * *", function () {
   https
     .get(process.env.API_URL, (res) => {
-      if (res.statusCode === 200) console.log("GET request sent successfully");
-      else console.log("GET request failed", res.statusCode);
+      if (res.statusCode === 200)
+        console.log("✅ Requête GET envoyée avec succès");
+      else
+        console.log("❌ Échec de la requête GET", res.statusCode);
     })
-    .on("error", (e) => console.error("Error while sending request", e));
+    .on("error", (e) => console.error("⚠️ Erreur lors de l’envoi de la requête :", e));
 });
 
 export default job;
 
-// CRON JOB EXPLANATION:
-// Cron jobs are scheduled tasks that run periodically at fixed intervals
-// we want to send 1 GET request for every 14 minutes
+/* 
+🕒 EXPLICATION DU CRON JOB :
+Un "cron job" est une tâche planifiée qui s’exécute automatiquement à intervalles réguliers.
+Ici, nous envoyons une requête GET toutes les 14 minutes pour maintenir l’application active.
 
-// How to define a "Schedule"?
-// You define a schedule using a cron expression, which consists of 5 fields representing:
+📅 Comment définir une planification ?
+Une planification Cron s’écrit sous la forme d’une expression composée de 5 champs :
 
-//! MINUTE, HOUR, DAY OF THE MONTH, MONTH, DAY OF THE WEEK
+👉 MINUTE | HEURE | JOUR DU MOIS | MOIS | JOUR DE LA SEMAINE
 
-//? EXAMPLES && EXPLANATION:
-//* 14 * * * * - Every 14 minutes
-//* 0 0 * * 0 - At midnight on every Sunday
-//* 30 3 15 * * - At 3:30 AM, on the 15th of every month
-//* 0 0 1 1 * - At midnight, on January 1st
-//* 0 * * * * - Every hour
+📖 EXEMPLES DE PLANIFICATIONS :
+--------------------------------
+// 14 * * * *  → Toutes les 14 minutes  
+// 0 0 * * 0    → À minuit chaque dimanche  
+// 30 3 15 * *  → À 3h30 du matin le 15 de chaque mois  
+// 0 0 1 1 *    → À minuit le 1er janvier  
+// 0 * * * *    → Toutes les heures
+
+*/

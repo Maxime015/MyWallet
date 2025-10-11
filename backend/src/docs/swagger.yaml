@@ -1,7 +1,7 @@
 openapi: 3.0.0
 info:
   title: Budget Manager API
-  description: API complète pour la gestion de budget, transactions, abonnements et fonctionnalités sociales
+  description: API de gestion de budget, transactions et abonnements
   version: 1.0.0
   contact:
     name: Support API
@@ -32,39 +32,21 @@ components:
           example: "johndoe"
         email:
           type: string
-          format: email
           example: "john@example.com"
         profileImage:
           type: string
           example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
-        firstName:
-          type: string
-          example: "John"
-        lastName:
-          type: string
-          example: "Doe"
-        bio:
-          type: string
-          example: "Développeur passionné"
-        location:
-          type: string
-          example: "Paris, France"
         createdAt:
           type: string
           format: date-time
-        followersCount:
-          type: integer
-          example: 15
-        followingCount:
-          type: integer
-          example: 8
-        isFollowing:
-          type: boolean
-          example: false
+          example: "2023-01-01T10:00:00Z"
 
     AuthResponse:
       type: object
       properties:
+        message:
+          type: string
+          example: "Utilisateur créé avec succès"
         token:
           type: string
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -82,7 +64,7 @@ components:
           example: 1
         name:
           type: string
-          example: "Budget Alimentation"
+          example: "Budget Alimentaire"
         amount:
           type: number
           format: float
@@ -93,13 +75,36 @@ components:
         created_at:
           type: string
           format: date-time
-        total_transactions:
-          type: number
-          format: float
-          example: 250.00
+          example: "2023-01-01T10:00:00Z"
+
+    BudgetSummary:
+      type: object
+      properties:
+        budget_id:
+          type: integer
+          example: 1
+        budget_name:
+          type: string
+          example: "Budget Alimentaire"
         transaction_count:
           type: integer
           example: 5
+        total_spent:
+          type: number
+          format: float
+          example: 350.00
+        budget_total:
+          type: number
+          format: float
+          example: 500.00
+        remaining_amount:
+          type: number
+          format: float
+          example: 150.00
+        percentage_used:
+          type: number
+          format: float
+          example: 70.0
 
     Transaction:
       type: object
@@ -119,16 +124,14 @@ components:
         amount:
           type: number
           format: float
-          example: -45.50
+          example: 45.50
         category:
           type: string
           example: "food"
         created_at:
           type: string
           format: date-time
-        budget_name:
-          type: string
-          example: "Budget Alimentation"
+          example: "2023-01-01T10:00:00Z"
 
     Subscription:
       type: object
@@ -149,7 +152,7 @@ components:
         date:
           type: string
           format: date
-          example: "2024-01-15"
+          example: "2023-01-15"
         recurrence:
           type: string
           enum: ["monthly", "yearly", "weekly"]
@@ -166,178 +169,25 @@ components:
         created_at:
           type: string
           format: date-time
-
-    Grocery:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        user_id:
-          type: integer
-          example: 1
-        text:
-          type: string
-          example: "Lait, œufs, pain"
-        is_completed:
-          type: boolean
-          example: false
-        created_at:
-          type: string
-          format: date-time
-
-    Post:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        user_id:
-          type: integer
-          example: 1
-        title:
-          type: string
-          nullable: true
-          example: "Mon premier post"
-        content:
-          type: string
-          example: "Contenu de mon post..."
-        image:
-          type: string
-          nullable: true
-          example: "https://res.cloudinary.com/.../image.jpg"
-        created_at:
-          type: string
-          format: date-time
-        username:
-          type: string
-          example: "johndoe"
-        first_name:
-          type: string
-          example: "John"
-        last_name:
-          type: string
-          example: "Doe"
-        profile_image:
-          type: string
-          example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
-        likes:
-          type: integer
-          example: 5
-        comments:
-          type: array
-          items:
-            $ref: '#/components/schemas/Comment'
-        userLiked:
-          type: boolean
-          example: true
-
-    Comment:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        user_id:
-          type: integer
-          example: 1
-        post_id:
-          type: integer
-          example: 1
-        content:
-          type: string
-          example: "Super post !"
-        created_at:
-          type: string
-          format: date-time
-        username:
-          type: string
-          example: "johndoe"
-        first_name:
-          type: string
-          example: "John"
-        last_name:
-          type: string
-          example: "Doe"
-        profile_image:
-          type: string
-          example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
-        likes:
-          type: integer
-          example: 2
-        userLiked:
-          type: boolean
-          example: false
-
-    Notification:
-      type: object
-      properties:
-        id:
-          type: integer
-          example: 1
-        type:
-          type: string
-          enum: ["follow", "like", "comment"]
-          example: "like"
-        created_at:
-          type: string
-          format: date-time
-        from:
-          type: object
-          properties:
-            username:
-              type: string
-              example: "johndoe"
-            first_name:
-              type: string
-              example: "John"
-            last_name:
-              type: string
-              example: "Doe"
-            profile_image:
-              type: string
-              example: "https://api.dicebear.com/7.x/avataaars/svg?seed=johndoe"
-        post:
-          type: object
-          nullable: true
-          properties:
-            title:
-              type: string
-              example: "Mon post"
-            content:
-              type: string
-              example: "Contenu du post"
-            image:
-              type: string
-              example: "https://res.cloudinary.com/.../image.jpg"
-        comment:
-          type: object
-          nullable: true
-          properties:
-            content:
-              type: string
-              example: "Super commentaire !"
+          example: "2023-01-01T10:00:00Z"
 
     Error:
       type: object
       properties:
         message:
           type: string
-          example: "Error message"
+          example: "Erreur interne du serveur"
         error:
           type: string
-          example: "Detailed error description"
-
-security:
-  - bearerAuth: []
+          example: "Description détaillée de l'erreur"
 
 paths:
-  # ===============================
-  # AUTHENTICATION ROUTES
-  # ===============================
+  # =========================================
+  # ROUTES D'AUTHENTIFICATION
+  # =========================================
   /auth/register:
     post:
-      summary: Inscription d'un nouvel utilisateur
+      summary: "Inscription d'un nouvel utilisateur"
       tags: [Authentication]
       requestBody:
         required: true
@@ -362,35 +212,21 @@ paths:
                   type: string
                   minLength: 6
                   example: "password123"
-                first_name:
-                  type: string
-                  example: "John"
-                last_name:
-                  type: string
-                  example: "Doe"
-                bio:
-                  type: string
-                  example: "Développeur passionné"
-                location:
-                  type: string
-                  example: "Paris, France"
       responses:
         201:
-          description: Utilisateur créé avec succès
+          description: "Utilisateur créé avec succès"
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         400:
-          description: Données invalides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          description: "Données invalides ou utilisateur existant"
+        500:
+          description: "Erreur interne du serveur"
 
   /auth/login:
     post:
-      summary: Connexion d'un utilisateur
+      summary: "Connexion utilisateur"
       tags: [Authentication]
       requestBody:
         required: true
@@ -411,137 +247,25 @@ paths:
                   example: "password123"
       responses:
         200:
-          description: Connexion réussie
+          description: "Connexion réussie"
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/AuthResponse'
         400:
-          description: Identifiants invalides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+          description: "Identifiants invalides"
+        500:
+          description: "Erreur interne du serveur"
 
-  /auth/profile/{username}:
+  /auth/profile-images:
     get:
-      summary: Récupérer le profil d'un utilisateur
-      tags: [Authentication]
-      parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-          example: "johndoe"
-      responses:
-        200:
-          description: Profil utilisateur récupéré
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        404:
-          description: Utilisateur non trouvé
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /auth/me:
-    get:
-      summary: Récupérer l'utilisateur connecté
+      summary: "Récupération des images de profil des utilisateurs"
       tags: [Authentication]
       security:
         - bearerAuth: []
       responses:
         200:
-          description: Utilisateur récupéré avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        401:
-          description: Non authentifié
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /auth/profile:
-    put:
-      summary: Mettre à jour le profil utilisateur
-      tags: [Authentication]
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                username:
-                  type: string
-                  example: "newusername"
-                email:
-                  type: string
-                  format: email
-                  example: "newemail@example.com"
-                first_name:
-                  type: string
-                  example: "New First Name"
-                last_name:
-                  type: string
-                  example: "New Last Name"
-                bio:
-                  type: string
-                  example: "New bio"
-                location:
-                  type: string
-                  example: "New location"
-                profile_image:
-                  type: string
-                  example: "https://new-image-url.com"
-      responses:
-        200:
-          description: Profil mis à jour avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  user:
-                    $ref: '#/components/schemas/User'
-        400:
-          description: Données invalides
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /auth/follow/{targetUserId}:
-    post:
-      summary: Suivre ou ne plus suivre un utilisateur
-      tags: [Authentication]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: targetUserId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 2
-      responses:
-        200:
-          description: Action réussie
+          description: "Images récupérées avec succès"
           content:
             application/json:
               schema:
@@ -549,26 +273,6 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: "User followed successfully"
-        400:
-          description: Impossible de se suivre soi-même
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
-  /auth/profile-images:
-    get:
-      summary: Récupérer toutes les images de profil
-      tags: [Authentication]
-      responses:
-        200:
-          description: Liste des images de profil
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
                   users:
                     type: array
                     items:
@@ -578,13 +282,15 @@ paths:
                           type: string
                         profileImage:
                           type: string
+        500:
+          description: "Erreur interne du serveur"
 
-  # ===============================
-  # BUDGET ROUTES
-  # ===============================
+  # =========================================
+  # ROUTES DE BUDGETS
+  # =========================================
   /budgets:
     post:
-      summary: Créer un nouveau budget
+      summary: "Création d'un nouveau budget"
       tags: [Budgets]
       security:
         - bearerAuth: []
@@ -601,7 +307,7 @@ paths:
               properties:
                 name:
                   type: string
-                  example: "Budget Alimentation"
+                  example: "Budget Alimentaire"
                 amount:
                   type: number
                   format: float
@@ -611,7 +317,7 @@ paths:
                   example: "food"
       responses:
         201:
-          description: Budget créé avec succès
+          description: "Budget créé avec succès"
           content:
             application/json:
               schema:
@@ -621,41 +327,14 @@ paths:
                     type: string
                   budget:
                     $ref: '#/components/schemas/Budget'
-
-    get:
-      summary: Récupérer tous les budgets de l'utilisateur
-      tags: [Budgets]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Liste des budgets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Budget'
-
-  /budgets/user-budgets:
-    get:
-      summary: Récupérer les budgets de l'utilisateur avec détails
-      tags: [Budgets]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Budgets récupérés avec succès
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Budget'
+        400:
+          description: "Données invalides"
+        500:
+          description: "Erreur interne du serveur"
 
   /budgets/{budgetId}:
     delete:
-      summary: Supprimer un budget
+      summary: "Suppression d'un budget"
       tags: [Budgets]
       security:
         - bearerAuth: []
@@ -668,141 +347,41 @@ paths:
           example: 1
       responses:
         200:
-          description: Budget supprimé avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+          description: "Budget supprimé avec succès"
+        404:
+          description: "Budget non trouvé"
+        500:
+          description: "Erreur interne du serveur"
 
   /budgets/reached:
     get:
-      summary: Récupérer le nombre de budgets atteints
+      summary: "Récupération du nombre de budgets atteints"
       tags: [Budgets]
       security:
         - bearerAuth: []
       responses:
         200:
-          description: Statistiques des budgets atteints
+          description: "Nombre de budgets atteints récupéré"
           content:
             application/json:
               schema:
-                type: string
-                example: "3/5"
-
-  /budgets/data:
-    get:
-      summary: Récupérer les données budgétaires de l'utilisateur
-      tags: [Budgets]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Données budgétaires
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    name:
-                      type: string
-                    total_budget_amount:
-                      type: number
-                    total_transactions_amount:
-                      type: number
-                    category:
-                      type: string
-
-  /budgets/last:
-    get:
-      summary: Récupérer les 3 derniers budgets
-      tags: [Budgets]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Derniers budgets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Budget'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Budgets atteints : 2/5"
+        500:
+          description: "Erreur interne du serveur"
 
   /budgets/all-summaries:
     get:
-      summary: Récupérer le résumé complet de tous les budgets
+      summary: "Récupération du résumé de tous les budgets"
       tags: [Budgets]
       security:
         - bearerAuth: []
       responses:
         200:
-          description: Résumé des budgets
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    budget_id:
-                      type: integer
-                    budget_name:
-                      type: string
-                    transaction_count:
-                      type: integer
-                    total_spent:
-                      type: number
-                    budget_total:
-                      type: number
-                    remaining_amount:
-                      type: number
-                    percentage_used:
-                      type: number
-                    display:
-                      type: object
-
-  # ===============================
-  # TRANSACTION ROUTES
-  # ===============================
-  /transactions:
-    post:
-      summary: Créer une nouvelle transaction
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - budget_id
-                - amount
-                - description
-                - category
-              properties:
-                budget_id:
-                  type: integer
-                  example: 1
-                amount:
-                  type: number
-                  format: float
-                  example: -45.50
-                description:
-                  type: string
-                  example: "Courses supermarché"
-                category:
-                  type: string
-                  example: "food"
-      responses:
-        201:
-          description: Transaction créée avec succès
+          description: "Résumé des budgets récupéré avec succès"
           content:
             application/json:
               schema:
@@ -810,202 +389,44 @@ paths:
                 properties:
                   message:
                     type: string
-                  transaction:
-                    $ref: '#/components/schemas/Transaction'
+                  budgets:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BudgetSummary'
+        500:
+          description: "Erreur interne du serveur"
 
+  # =========================================
+  # ROUTES D'ABONNEMENTS
+  # =========================================
+  /subscriptions/{userId}:
     get:
-      summary: Récupérer les transactions de l'utilisateur
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Liste des transactions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaction'
-
-  /transactions/my-transactions:
-    get:
-      summary: Récupérer les transactions personnelles
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Transactions récupérées
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaction'
-
-  /transactions/budget/{budgetId}:
-    get:
-      summary: Récupérer les transactions d'un budget spécifique
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: budgetId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: Transactions du budget
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaction'
-
-  /transactions/{transactionId}:
-    delete:
-      summary: Supprimer une transaction
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: transactionId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: Transaction supprimée avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
-  /transactions/period/{period}:
-    get:
-      summary: Récupérer les transactions par période
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: period
-          in: path
-          required: true
-          schema:
-            type: string
-            enum: [last7, last30, last90, last365]
-          example: "last30"
-      responses:
-        200:
-          description: Transactions de la période
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaction'
-
-  /transactions/total-amount:
-    get:
-      summary: Récupérer le montant total des transactions
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Montant total
-          content:
-            application/json:
-              schema:
-                type: number
-                example: 1250.75
-
-  /transactions/total-count:
-    get:
-      summary: Récupérer le nombre total de transactions
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Nombre de transactions
-          content:
-            application/json:
-              schema:
-                type: integer
-                example: 25
-
-  /transactions/last:
-    get:
-      summary: Récupérer les 10 dernières transactions
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Dernières transactions
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Transaction'
-
-  /transactions/summary:
-    get:
-      summary: Récupérer le résumé financier
-      tags: [Transactions]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Résumé financier
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  balance:
-                    type: number
-                    example: 1500.25
-                  income:
-                    type: number
-                    example: 2000.00
-                  expenses:
-                    type: number
-                    example: 499.75
-
-  # ===============================
-  # SUBSCRIPTION ROUTES
-  # ===============================
-  /subscriptions:
-    get:
-      summary: Récupérer tous les abonnements de l'utilisateur
+      summary: "Récupération des abonnements d'un utilisateur"
       tags: [Subscriptions]
       security:
         - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
       responses:
         200:
-          description: Liste des abonnements
+          description: "Abonnements récupérés avec succès"
           content:
             application/json:
               schema:
                 type: array
                 items:
                   $ref: '#/components/schemas/Subscription'
+        500:
+          description: "Erreur interne du serveur"
 
+  /subscriptions:
     post:
-      summary: Créer un nouvel abonnement
+      summary: "Création d'un nouvel abonnement"
       tags: [Subscriptions]
       security:
         - bearerAuth: []
@@ -1032,7 +453,7 @@ paths:
                 date:
                   type: string
                   format: date
-                  example: "2024-01-15"
+                  example: "2023-01-15"
                 recurrence:
                   type: string
                   enum: ["monthly", "yearly", "weekly"]
@@ -1045,18 +466,27 @@ paths:
                 image:
                   type: string
                   nullable: true
-                  example: "data:image/jpeg;base64,..."
+                  description: "Image en base64 (optionnelle)"
       responses:
         201:
-          description: Abonnement créé avec succès
+          description: "Abonnement créé avec succès"
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Subscription'
+                type: object
+                properties:
+                  message:
+                    type: string
+                  subscription:
+                    $ref: '#/components/schemas/Subscription'
+        400:
+          description: "Données invalides"
+        500:
+          description: "Erreur interne du serveur"
 
   /subscriptions/{id}:
     delete:
-      summary: Supprimer un abonnement
+      summary: "Suppression d'un abonnement"
       tags: [Subscriptions]
       security:
         - bearerAuth: []
@@ -1069,7 +499,28 @@ paths:
           example: 1
       responses:
         200:
-          description: Abonnement supprimé avec succès
+          description: "Abonnement supprimé avec succès"
+        404:
+          description: "Abonnement non trouvé"
+        500:
+          description: "Erreur interne du serveur"
+
+  /subscriptions/summary/{userId}:
+    get:
+      summary: "Récupération du résumé des abonnements"
+      tags: [Subscriptions]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+          example: 1
+      responses:
+        200:
+          description: "Résumé récupéré avec succès"
           content:
             application/json:
               schema:
@@ -1077,52 +528,23 @@ paths:
                 properties:
                   message:
                     type: string
-                  deletedId:
-                    type: integer
-
-  /subscriptions/summary:
-    get:
-      summary: Récupérer le résumé des abonnements
-      tags: [Subscriptions]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Résumé des abonnements
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
                   total:
                     type: number
-                    example: 45.97
+                    format: float
+                    example: 65.97
                   count:
                     type: integer
                     example: 3
+        500:
+          description: "Erreur interne du serveur"
 
-  # ===============================
-  # GROCERY ROUTES
-  # ===============================
-  /groceries:
-    get:
-      summary: Récupérer tous les articles de course
-      tags: [Groceries]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Liste des articles
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Grocery'
-
+  # =========================================
+  # ROUTES DE TRANSACTIONS
+  # =========================================
+  /transactions:
     post:
-      summary: Ajouter un nouvel article de course
-      tags: [Groceries]
+      summary: "Création d'une transaction"
+      tags: [Transactions]
       security:
         - bearerAuth: []
       requestBody:
@@ -1132,27 +554,23 @@ paths:
             schema:
               type: object
               required:
-                - text
+                - budget_id
+                - amount
+                - description
               properties:
-                text:
+                budget_id:
+                  type: integer
+                  example: 1
+                amount:
+                  type: number
+                  format: float
+                  example: 45.50
+                description:
                   type: string
-                  example: "Lait, œufs, pain"
+                  example: "Courses supermarché"
       responses:
         201:
-          description: Article ajouté avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Grocery'
-
-    delete:
-      summary: Supprimer tous les articles de course
-      tags: [Groceries]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Tous les articles supprimés
+          description: "Transaction créée avec succès"
           content:
             application/json:
               schema:
@@ -1160,57 +578,23 @@ paths:
                 properties:
                   message:
                     type: string
-                  deletedCount:
-                    type: integer
+                  transaction:
+                    $ref: '#/components/schemas/Transaction'
+        400:
+          description: "Données invalides ou budget dépassé"
+        404:
+          description: "Budget non trouvé"
+        500:
+          description: "Erreur interne du serveur"
 
-  /groceries/{id}:
-    put:
-      summary: Modifier un article de course
-      tags: [Groceries]
+    get:
+      summary: "Récupération de toutes les transactions de l'utilisateur"
+      tags: [Transactions]
       security:
         - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - text
-              properties:
-                text:
-                  type: string
-                  example: "Lait demi-écrémé"
       responses:
         200:
-          description: Article modifié avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Grocery'
-
-    delete:
-      summary: Supprimer un article de course
-      tags: [Groceries]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: Article supprimé avec succès
+          description: "Transactions récupérées avec succès"
           content:
             application/json:
               schema:
@@ -1218,132 +602,21 @@ paths:
                 properties:
                   message:
                     type: string
-                  deletedId:
-                    type: integer
-
-  /groceries/{id}/toggle:
-    patch:
-      summary: Basculer l'état de complétion d'un article
-      tags: [Groceries]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: État modifié avec succès
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Grocery'
-
-  /groceries/summary:
-    get:
-      summary: Récupérer le résumé des courses
-      tags: [Groceries]
-      security:
-        - bearerAuth: []
-      responses:
-        200:
-          description: Résumé des courses
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  total:
-                    type: integer
-                    example: 10
-                  completed:
-                    type: integer
-                    example: 3
-
-  # ===============================
-  # POST ROUTES
-  # ===============================
-  /posts:
-    get:
-      summary: Récupérer tous les posts
-      tags: [Posts]
-      responses:
-        200:
-          description: Liste des posts
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  posts:
+                  transactions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Post'
+                      $ref: '#/components/schemas/Transaction'
+        500:
+          description: "Erreur interne du serveur"
 
-    post:
-      summary: Créer un nouveau post
-      tags: [Posts]
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          multipart/form-data:
-            schema:
-              type: object
-              properties:
-                title:
-                  type: string
-                  example: "Mon premier post"
-                content:
-                  type: string
-                  example: "Contenu de mon post..."
-                image:
-                  type: string
-                  format: binary
-      responses:
-        201:
-          description: Post créé avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  post:
-                    $ref: '#/components/schemas/Post'
-
-  /posts/{postId}:
+  /transactions/budget/{budgetId}:
     get:
-      summary: Récupérer un post spécifique
-      tags: [Posts]
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: Détails du post
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  post:
-                    $ref: '#/components/schemas/Post'
-
-    delete:
-      summary: Supprimer un post
-      tags: [Posts]
+      summary: "Récupération des transactions d'un budget spécifique"
+      tags: [Transactions]
       security:
         - bearerAuth: []
       parameters:
-        - name: postId
+        - name: budgetId
           in: path
           required: true
           schema:
@@ -1351,7 +624,7 @@ paths:
           example: 1
       responses:
         200:
-          description: Post supprimé avec succès
+          description: "Transactions récupérées avec succès"
           content:
             application/json:
               schema:
@@ -1359,125 +632,23 @@ paths:
                 properties:
                   message:
                     type: string
-
-  /posts/user/{username}:
-    get:
-      summary: Récupérer les posts d'un utilisateur
-      tags: [Posts]
-      parameters:
-        - name: username
-          in: path
-          required: true
-          schema:
-            type: string
-          example: "johndoe"
-      responses:
-        200:
-          description: Posts de l'utilisateur
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  posts:
+                  transactions:
                     type: array
                     items:
-                      $ref: '#/components/schemas/Post'
+                      $ref: '#/components/schemas/Transaction'
+        404:
+          description: "Budget non trouvé"
+        500:
+          description: "Erreur interne du serveur"
 
-  /posts/{postId}/like:
-    post:
-      summary: Aimer ou ne plus aimer un post
-      tags: [Posts]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: Action réussie
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-
-  # ===============================
-  # COMMENT ROUTES
-  # ===============================
-  /comments/post/{postId}:
-    get:
-      summary: Récupérer les commentaires d'un post
-      tags: [Comments]
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: Liste des commentaires
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  comments:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Comment'
-
-    post:
-      summary: Créer un nouveau commentaire
-      tags: [Comments]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: postId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - content
-              properties:
-                content:
-                  type: string
-                  example: "Super post !"
-      responses:
-        201:
-          description: Commentaire créé avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  comment:
-                    $ref: '#/components/schemas/Comment'
-
-  /comments/{commentId}:
+  /transactions/{transactionId}:
     delete:
-      summary: Supprimer un commentaire
-      tags: [Comments]
+      summary: "Suppression d'une transaction"
+      tags: [Transactions]
       security:
         - bearerAuth: []
       parameters:
-        - name: commentId
+        - name: transactionId
           in: path
           required: true
           schema:
@@ -1485,53 +656,21 @@ paths:
           example: 1
       responses:
         200:
-          description: Commentaire supprimé avec succès
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
+          description: "Transaction supprimée avec succès"
+        404:
+          description: "Transaction non trouvée"
+        500:
+          description: "Erreur interne du serveur"
 
-  # ===============================
-  # NOTIFICATION ROUTES
-  # ===============================
-  /notifications:
+  /transactions/summary:
     get:
-      summary: Récupérer les notifications de l'utilisateur
-      tags: [Notifications]
+      summary: "Récupération du résumé financier"
+      tags: [Transactions]
       security:
         - bearerAuth: []
       responses:
         200:
-          description: Liste des notifications
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  notifications:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Notification'
-
-  /notifications/{notificationId}:
-    delete:
-      summary: Supprimer une notification
-      tags: [Notifications]
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: notificationId
-          in: path
-          required: true
-          schema:
-            type: integer
-          example: 1
-      responses:
-        200:
-          description: Notification supprimée avec succès
+          description: "Résumé financier récupéré avec succès"
           content:
             application/json:
               schema:
@@ -1539,25 +678,17 @@ paths:
                 properties:
                   message:
                     type: string
-
-  # ===============================
-  # HEALTH ROUTE
-  # ===============================
-  /health:
-    get:
-      summary: Vérifier l'état du serveur
-      tags: [Health]
-      responses:
-        200:
-          description: Serveur fonctionne correctement
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: "OK"
-                  message:
-                    type: string
-                    example: "Serveur fonctionne"
+                  solde:
+                    type: number
+                    format: float
+                    example: 1500.00
+                  revenus:
+                    type: number
+                    format: float
+                    example: 3000.00
+                  depenses:
+                    type: number
+                    format: float
+                    example: 1500.00
+        500:
+          description: "Erreur interne du serveur"
