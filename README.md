@@ -138,11 +138,11 @@ EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY=<votre_cle_clerk>
 
 ## 🚀 Démarrer le Projet
 
-Suivez ces étapes pour installer Nexus :
+Suivez ces étapes pour installer MyWallet :
 
 ## 🔥 Cloner le dépôt
 ```bash
-git clone https://github.com/ikyawthetpaing/Nexus.git
+git clone https://github.com/Maxime015/MyWallet.git
 ```
 
 ------------------------------------------------------------------------
