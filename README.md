@@ -26,6 +26,10 @@
   <img src="./mobile/assets/images/screenshots/8.png" style="width: 32%; margin-bottom: 10px;" />
   <img src="./mobile/assets/images/screenshots/9.png" style="width: 32%; margin-bottom: 10px;" />
 
+  <img src="./mobile/assets/images/screenshots/10.png" style="width: 32%; margin-bottom: 10px;" />
+  <img src="./mobile/assets/images/screenshots/11.png" style="width: 32%; margin-bottom: 10px;" />
+  <img src="./mobile/assets/images/screenshots/12.png" style="width: 32%; margin-bottom: 10px;" />
+
 </div>
 
 ------------------------------------------------------------------------
