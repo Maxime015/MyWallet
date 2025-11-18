@@ -1,334 +1,403 @@
-# 💰 **e-Track API**
+# 📊 MyWallet — API de Gestion Financière
 
-Une **API RESTful moderne** pour la **gestion de budgets, transactions et abonnements**, développée avec **Node.js** et **Express**.  
-Elle offre une solution **performante**, **sécurisée** et **extensible** pour le suivi des dépenses et des revenus.
+**MyWallet** est une API RESTful conçue pour simplifier la gestion de vos finances personnelles.
+Elle permet de **suivre vos transactions**, **gérer vos abonnements récurrents** et **analyser votre situation financière** grâce à des résumés clairs et automatisés.
+
+--- 
+
+## 🚀 Fonctionnalités
+
+### 🔐 Authentification Sécurisée
+
+* Inscription et connexion avec validation des données
+* Authentification via **JWT (JSON Web Tokens)**
+* Middleware de protection des routes
+* Limitation des tentatives de connexion *(anti-brute-force)*
+
+### 💰 Gestion des Transactions
+
+* ➕ Création de transactions (revenus / dépenses)
+* 📋 Liste complète des transactions
+* 🗑️ Suppression de transactions
+* 📊 Résumé financier : solde, revenus totaux, dépenses totales
+
+### 🗕️ Gestion des Abonnements
+
+* ➕ Ajout d’abonnements (Netflix, Spotify, etc.)
+* 👀 Consultation et suppression des abonnements
+* 🌟 Attribution d’une note (1 à 5 étoiles)
+* 🖼️ Téléversement d’images via **Cloudinary**
+* 📈 Résumé global : coût total et nombre d’abonnements
 
 ---
 
-## 🧱 **Structure du Projet**
+## 🛠️ Technologies Utilisées
 
-```plaintext
-backend/
-├── 📁 config/                # Configuration de l'application
-│   ├── 🗄️ db.js              # Base de données PostgreSQL (Neon)
-│   ├── 🔐 arcjet.js          # Sécurité Arcjet
-│   ├── ⚡ upstash.js         # Redis Upstash
-│   ├── ☁️ cloudinary.js     # Cloudinary
-│   ├── 🔧 env.js            # Variables d'environnement
-│   └── ⏰ cron.js           # Tâches planifiées
-│
-├── 📁 controllers/          # Logique métier
-│   ├── 🔐 authController.js
-│   ├── 📊 budgetController.js
-│   ├── 💳 transactionController.js
-│   └── 📅 subscriptionController.js
-│
-├── 📁 middleware/           # Middlewares personnalisés
-│   ├── 🛡️ auth.middleware.js
-│   ├── 🚦 rateLimiter.js
-│   └── 🧱 arcjet.middleware.js
-│
-├── 📁 routes/               # Routes API
-│   ├── 🔐 authRoutes.js
-│   ├── 📊 budgetRoutes.js
-│   ├── 💳 transactionRoutes.js
-│   └── 📅 subscriptionsRoute.js
-│
-├── 📁 docs/
-│   └── 📘 swagger.yaml     # Documentation OpenAPI/Swagger
-│
-├── 🚀 server.js
-├── 📄 package.json
-└── 📖 README.md
+| Domaine           | Technologie                        |
+| ----------------- | ---------------------------------- |
+| Backend           | Node.js, Express.js                |
+| Base de données   | PostgreSQL (via **Neon**)          |
+| Authentification  | JWT                                |
+| Sécurité          | bcryptjs, CORS, validation serveur |
+| Stockage d’images | Cloudinary                         |
+| Documentation     | Swagger / OpenAPI                  |
+| Rate Limiting     | Upstash Redis                      |
+| Planification     | Cron Jobs                          |
+
+---
+
+## 🏗️ Architecture Globale
+
+```mermaid
+graph TB
+    %% Clients
+    subgraph "Clients"
+        WEB[Web Browser]
+        MOBILE[Mobile App]
+        POSTMAN[API Client]
+    end
+
+    %% Load Balancer
+    LB[Load Balancer]
+
+    %% Server Cluster
+    subgraph "Server Cluster"
+        SERVER1[Server Instance 1]
+        SERVER2[Server Instance 2]
+        SERVER3[Server Instance 3]
+    end
+
+    %% Application Layer
+    subgraph "Application Layer - Node.js/Express"
+        AUTH[Auth Controller]
+        TRANS[Transaction Controller]
+        SUBS[Subscription Controller]
+        MIDDLEWARE[Middleware Layer]
+    end
+
+    %% External Services
+    subgraph "External Services"
+        DB[(PostgreSQL\nNeon DB)]
+        CLOUD[Cloudinary\nImage Storage]
+        REDIS[Upstash Redis\nRate Limiting]
+        CRON[Cron Jobs\nAuto-ping]
+    end
+
+    %% Database Tables
+    subgraph "Database Schema"
+        USERS[users table]
+        TRANS_T[transactions table]
+        SUBS_T[subscriptions table]
+    end
+
+    %% Connections
+    WEB --> LB
+    MOBILE --> LB
+    POSTMAN --> LB
+    LB --> SERVER1
+    LB --> SERVER2
+    LB --> SERVER3
+    
+    SERVER1 --> MIDDLEWARE
+    SERVER2 --> MIDDLEWARE
+    SERVER3 --> MIDDLEWARE
+    
+    MIDDLEWARE --> AUTH
+    MIDDLEWARE --> TRANS
+    MIDDLEWARE --> SUBS
+    
+    AUTH --> USERS
+    TRANS --> TRANS_T
+    SUBS --> SUBS_T
+    SUBS --> CLOUD
+    
+    MIDDLEWARE --> REDIS
+    SERVER1 --> CRON
+    SERVER2 --> CRON
+    SERVER3 --> CRON
+    
+    USERS --> DB
+    TRANS_T --> DB
+    SUBS_T --> DB
+```
+---
+
+## 🔐 Flux d'Authentification
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant R as Rate Limiter
+    participant A as Auth Controller
+    participant DB as Database
+    participant B as Bcrypt/JWT
+
+    C->>R: POST /api/auth/register
+    R-->>A: Request passed
+    A->>A: Validate input data
+    A->>DB: Check if user exists
+    DB-->>A: User not found
+    A->>B: Hash password
+    B-->>A: Hashed password
+    A->>DB: Create new user
+    DB-->>A: User created
+    A->>B: Generate JWT token
+    B-->>A: Token generated
+    A-->>C: 201 Created + User + Token
 ```
 
 ---
 
-## 🚀 **Fonctionnalités**
+## 🗄️ Structure des Données
 
-### 🔐 **Authentification & Sécurité**
-- Authentification **JWT** (expiration 15 jours)  
-- Middleware de **protection des routes**  
-- Validation robuste des données  
-- Génération automatique d'**avatars DiceBear**  
-- **Rate limiting** intelligent via Upstash Redis  
-- **Limitation des tentatives de connexion** (3/min)  
+```mermaid
+erDiagram
+    users {
+        UUID id PK "DEFAULT uuid_generate_v4()"
+        VARCHAR username "UNIQUE, NOT NULL"
+        VARCHAR email "UNIQUE, NOT NULL"
+        VARCHAR password "NOT NULL"
+        VARCHAR profile_image "DEFAULT ''"
+        TIMESTAMPTZ created_at "DEFAULT CURRENT_TIMESTAMP"
+        TIMESTAMPTZ updated_at "DEFAULT CURRENT_TIMESTAMP"
+    }
 
-### 📊 **Budgets**
-- Création, suppression et consultation de budgets  
-- Catégorisation flexible (alimentation, transport…)  
-- Suivi en temps réel et pourcentages d'utilisation  
-- Détection des budgets atteints + résumés détaillés  
+    transactions {
+        UUID id PK "DEFAULT uuid_generate_v4()"
+        UUID user_id FK
+        VARCHAR title "NOT NULL"
+        DECIMAL amount "NOT NULL"
+        VARCHAR category "NOT NULL"
+        DATE created_at "DEFAULT CURRENT_DATE"
+    }
 
-### 💳 **Transactions**
-- Ajout / suppression de transactions par budget  
-- Historique filtré par catégorie  
-- Vérification automatique du solde disponible  
-- Résumé global (revenus, dépenses, solde)  
+    subscriptions {
+        UUID id PK "DEFAULT uuid_generate_v4()"
+        UUID user_id FK
+        VARCHAR label "NOT NULL"
+        NUMERIC amount "NOT NULL"
+        DATE date "NOT NULL"
+        VARCHAR recurrence "NOT NULL"
+        INTEGER rating "CHECK (1-5)"
+        VARCHAR image_url
+        TIMESTAMP created_at "DEFAULT CURRENT_TIMESTAMP"
+    }
 
-### 📅 **Abonnements**
-- Création, consultation, suppression  
-- Gestion des récurrences (mensuelle, annuelle…)  
-- Système de notation (1 à 5 étoiles)  
-- Upload d'images via **Cloudinary**  
-- Résumé total des coûts d'abonnement  
+    users ||--o{ transactions : "has"
+    users ||--o{ subscriptions : "has"
 
-### 🛡️ **Sécurité Avancée**
-- **Arcjet Protection** (bots, attaques)  
-- **Rate limiting multicouche** (Upstash + middleware)  
-- **Token Bucket Algorithm**  
-- **bcrypt** pour hashage des mots de passe  
-- **JWT sécurisés** avec vérification d’expiration  
-
----
-
-## 📋 **Prérequis**
-
-- [Node.js](https://nodejs.org) v18 ou supérieur  
-- [PostgreSQL Neon](https://neon.tech)  
-- [Cloudinary](https://cloudinary.com)  
-- [Arcjet](https://arcjet.com)  
-- [Upstash Redis](https://upstash.com)  
+```
 
 ---
 
-## ⚙️ **Installation**
 
-### 1️⃣ Cloner le dépôt
+## 📡 Flux Complet des Requêtes API
+
+```mermaid
+flowchart TD
+    Start([Request Start]) --> RateLimit{Rate Limit<br/>Check}
+    
+    RateLimit -- "❌ Too Many Requests" --> Error429[429 Too Many Requests]
+    
+    RateLimit -- "✅ Within Limit" --> AuthCheck{Auth Required?}
+    
+    AuthCheck -- "Public Route" --> PublicRoute[Process Public Request]
+    AuthCheck -- "Protected Route" --> VerifyToken{Verify JWT Token}
+    
+    VerifyToken -- "❌ Invalid/Expired" --> Error401[401 Unauthorized]
+    
+    VerifyToken -- "✅ Valid Token" --> ExtractUser[Extract User Data]
+    ExtractUser --> ValidateData{Validate Request Data}
+    
+    ValidateData -- "❌ Invalid Data" --> Error400[400 Bad Request]
+    
+    ValidateData -- "✅ Valid Data" --> BusinessLogic[Business Logic]
+    BusinessLogic --> DBOperation[Database Operation]
+    DBOperation --> Response[Send Response]
+    
+    Response --> End([Request End])
+    
+    Error429 --> End
+    Error401 --> End
+    Error400 --> End
+    
+    PublicRoute --> ValidateDataPublic{Validate Public Data}
+    ValidateDataPublic -- "✅ Valid" --> PublicBusiness[Public Business Logic]
+    ValidateDataPublic -- "❌ Invalid" --> Error400
+    PublicBusiness --> PublicDB[Public DB Operation]
+    PublicDB --> PublicResponse[Send Public Response]
+    PublicResponse --> End
+
+```
+
+---
+
+## ⚙️ Installation et Démarrage
+
+### 🔧 Prérequis
+
+* Node.js **v18+**
+* Compte **Neon PostgreSQL**
+* Compte **Cloudinary**
+
+### 📦 Installation
 
 ```bash
-git clone https://github.com/Maxime015/eTrack-Backend.git
+git clone https://github.com/Maxime015/MyWallet-Backend.git backend
 cd backend
-```
-
-### 2️⃣ Installer les dépendances
-
-```bash
 npm install
 ```
 
-### 3️⃣ Configurer les variables d'environnement
+### 🧩 Configuration
 
-```bash
-cp .env.example .env
-```
+Créer un fichier `.env` à la racine :
 
-**Exemple `.env`** :
-
-```bash
-# Server
+```env
+# Serveur
 PORT=3000
 NODE_ENV=development
-JWT_SECRET=super_secret
 
-# Database
-DATABASE_URL=<votre_url_postgresql_neon>
+# Base de données
+DATABASE_URL=votre_url_neon_postgresql
+
+# JWT
+JWT_SECRET=votre_secret_jwt
 
 # Cloudinary
-CLOUDINARY_CLOUD_NAME=<nom>
-CLOUDINARY_API_KEY=<clé>
-CLOUDINARY_API_SECRET=<secret>
+CLOUDINARY_CLOUD_NAME=votre_cloud_name
+CLOUDINARY_API_KEY=votre_api_key
+CLOUDINARY_API_SECRET=votre_api_secret
 
-# Security
-ARCJET_KEY=<clé_arcjet>
-UPSTASH_REDIS_REST_URL=<url>
-UPSTASH_REDIS_REST_TOKEN=<token>
-
-# Cron
-API_URL=https://votre-app.render.com
+# Rate Limiting (Upstash Redis)
+UPSTASH_REDIS_REST_URL=votre_url_redis
+UPSTASH_REDIS_REST_TOKEN=votre_token_redis
 ```
 
-### 4️⃣ Initialiser la base de données
+### 🚀 Lancer le serveur
 
 ```bash
-npm run db:init
-```
-
-### 5️⃣ Lancer le serveur
-
-```bash
-# Développement
 npm run dev
-
-# Production
-npm start
 ```
 
----
-
-## 📚 **Documentation API**
-
-Swagger : 👉 [http://localhost:3000/api-docs](http://localhost:3000/api-docs)
-
-| Type | Endpoint | Description |
-|------|----------|-------------|
-| 📘 Docs | `/api-docs` | Interface Swagger |
-| ❤️ Health | `/health` | Vérifie l’état du serveur |
-| 🔐 Auth | `/api/auth/*` | Authentification |
-| 📊 Budgets | `/api/budgets/*` | Gestion budgets |
-| 💳 Transactions | `/api/transactions/*` | Gestion transactions |
-| 📅 Subscriptions | `/api/subscriptions/*` | Abonnements |
+> 💡 La base de données est initialisée automatiquement au premier démarrage via `initDB()` dans `db.js`.
 
 ---
 
-## 🗂️ **Endpoints Principaux**
-
-### 🔐 Authentification
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| POST | `/api/auth/register` | Inscription | ❌ |
-| POST | `/api/auth/login` | Connexion | ❌ |
-| GET  | `/api/auth/profile-images` | Avatars dispo | ✅ |
-
-### 📊 Budgets
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| POST | `/api/budgets` | Créer un budget | ✅ |
-| DELETE | `/api/budgets/:budgetId` | Supprimer un budget | ✅ |
-| GET | `/api/budgets/all-summaries` | Résumé global | ✅ |
-| GET | `/api/budgets/reached` | Budgets atteints | ✅ |
-
-### 💳 Transactions
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| POST | `/api/transactions` | Ajouter une transaction | ✅ |
-| GET  | `/api/transactions/my-transactions` | Mes transactions | ✅ |
-| GET  | `/api/transactions/budget/:budgetId` | Transactions d’un budget | ✅ |
-| GET  | `/api/transactions/summary` | Résumé global | ✅ |
-| DELETE | `/api/transactions/:transactionId` | Supprimer une transaction | ✅ |
-
-### 📅 Abonnements
-
-| Méthode | Endpoint | Description | Auth |
-|---------|----------|-------------|------|
-| GET | `/api/subscriptions/:userId` | Lister abonnements | ✅ |
-| POST | `/api/subscriptions` | Créer un abonnement | ✅ |
-| DELETE | `/api/subscriptions/:id` | Supprimer un abonnement | ✅ |
-| GET | `/api/subscriptions/summary/:userId` | Résumé abonnements | ✅ |
-
----
-
-## 🗃️ **Structure de la Base de Données**
+## 🗄️ Structure de la Base de Données
 
 ### 👥 Table `users`
 
-| Colonne | Type | Détails | Contraintes |
-|---------|------|---------|-------------|
-| id | SERIAL | Identifiant | PK |
-| username | VARCHAR(255) | Nom utilisateur | UNIQUE, NOT NULL |
-| email | VARCHAR(255) | Email | UNIQUE, NOT NULL |
-| password | VARCHAR(255) | Hashé bcrypt | NOT NULL |
-| profile_image | VARCHAR(255) | URL | DEFAULT DiceBear |
-| created_at | TIMESTAMPTZ | Date création | DEFAULT NOW() |
-| updated_at | TIMESTAMPTZ | Date modif | DEFAULT NOW() |
-
-(📊 Budgets / 💸 Transactions / 📅 Subscriptions suivent la même logique — voir documentation détaillée)
+| Champ         | Type         | Détails                             |
+| ------------- | ------------ | ----------------------------------- |
+| id            | UUID         | Clé primaire (`uuid_generate_v4()`) |
+| username      | VARCHAR(255) | Unique, requis                      |
+| email         | VARCHAR(255) | Unique, requis                      |
+| password      | VARCHAR(255) | Haché avec bcrypt                   |
+| profile_image | VARCHAR(255) | Défaut : chaîne vide                |
+| created_at    | TIMESTAMPTZ  | Défaut : `CURRENT_TIMESTAMP`        |
+| updated_at    | TIMESTAMPTZ  | Défaut : `CURRENT_TIMESTAMP`        |
 
 ---
 
-## 🛡️ **Sécurité**
+### 💰 Table `transactions`
 
-### 🔒 Arcjet Protection
-- **Shield Mode** : XSS, SQLi, CSRF  
-- **Bot Detection** (whitelist moteurs de recherche)  
-- **Token Bucket** : 10 requêtes / 10s  
-- **IP Tracking**
+| Champ       | Type                                     | Détails                             |
+| ----------- | ---------------------------------------- | ----------------------------------- |
+| id          | UUID                                     | Clé primaire (`uuid_generate_v4()`) |
+| user_id     | UUID                                     | Clé étrangère vers `users(id)`      |
+| title       | VARCHAR(255)                             | Requis                              |
+| amount      | DECIMAL(10,2)                            | Requis                              |
+| category    | VARCHAR(255)                             | Requis                              |
+| created_at  | DATE                                     | Défaut : `CURRENT_DATE`             |
+| Contraintes | `ON DELETE CASCADE`, `ON UPDATE CASCADE` |                                     |
 
-### 🚦 Rate Limiting
-- Upstash Redis : 100 requêtes/min/IP  
-- 3 tentatives de login / min  
-- **Sliding Window Algorithm**
+---
+
+### 📅 Table `subscriptions`
+
+| Champ       | Type                                     | Détails                             |
+| ----------- | ---------------------------------------- | ----------------------------------- |
+| id          | UUID                                     | Clé primaire (`uuid_generate_v4()`) |
+| user_id     | UUID                                     | Clé étrangère vers `users(id)`      |
+| label       | VARCHAR(255)                             | Requis                              |
+| amount      | NUMERIC(10,2)                            | Requis                              |
+| date        | DATE                                     | Requis                              |
+| recurrence  | VARCHAR(50)                              | Requis                              |
+| rating      | INTEGER                                  | Doit être entre 1 et 5              |
+| image_url   | VARCHAR(255)                             | Optionnel                           |
+| created_at  | TIMESTAMP                                | Défaut : `CURRENT_TIMESTAMP`        |
+| Contraintes | `ON DELETE CASCADE`, `ON UPDATE CASCADE` |                                     |
+
+---
+
+## 🔒 Sécurité Intégrée
+
+* Hachage des mots de passe avec **bcryptjs**
+* Vérification avec `comparePassword()`
+* Authentification **JWT**
+* Validation côté serveur
+* Protection **CORS**
+* Rate Limiting via **Redis**
+
+---
+
+## 📚 Endpoints Principaux
 
 ### 🔐 Authentification
-- **JWT** (15 jours)  
-- **bcrypt** + salt 10  
-- Validation stricte des inputs
+
+| Méthode | Endpoint             | Description             |
+| ------- | -------------------- | ----------------------- |
+| `POST`  | `/api/auth/register` | Inscription utilisateur |
+| `POST`  | `/api/auth/login`    | Connexion utilisateur   |
+
+### 💰 Transactions
+
+| Méthode  | Endpoint                | Description                   |
+| -------- | ----------------------- | ----------------------------- |
+| `GET`    | `/api/transactions`     | Liste des transactions        |
+| `POST`   | `/api/transactions`     | Création d’une transaction    |
+| `DELETE` | `/api/transactions/:id` | Suppression d’une transaction |
+
+### 📅 Abonnements
+
+| Méthode  | Endpoint                 | Description                 |
+| -------- | ------------------------ | --------------------------- |
+| `GET`    | `/api/subscriptions`     | Liste des abonnements       |
+| `POST`   | `/api/subscriptions`     | Création d’un abonnement    |
+| `DELETE` | `/api/subscriptions/:id` | Suppression d’un abonnement |
 
 ---
 
-## ⚡ **Performance & Monitoring**
+## 🧠 Exemple d’utilisation
 
-### 🔄 Tâches Planifiées (Cron)
-```javascript
-"*/14 * * * *"  // Toutes les 14 minutes
-```
-
-### 📊 Endpoint `/health`
-- Statut du serveur  
-- Timestamp  
-- Environnement  
-- Message  
-
----
-
-## 🚀 **Déploiement**
-
-### 📦 Scripts
+### Inscription utilisateur
 
 ```json
+POST /api/auth/register
 {
-  "dev": "nodemon server.js",
-  "start": "node server.js",
-  "db:init": "node -e \"import('./config/db.js').then(m => m.initDB())\""
+  "username": "alex",
+  "email": "alex@example.com",
+  "password": "motdepasse123"
 }
 ```
 
-### 🌐 Variables Prod
+### Ajout d’un abonnement
 
-```bash
-NODE_ENV=production
-DATABASE_URL=<url_neon>
-ARCJET_KEY=<clé_arcjet_prod>
-JWT_SECRET=<secret_32_caractères>
-CLOUDINARY_CLOUD_NAME=<cloud_name_prod>
+```json
+POST /api/subscriptions
+{
+  "label": "Netflix",
+  "amount": 15.99,
+  "date": "2024-01-15",
+  "recurrence": "monthly",
+  "rating": 4,
+  "image_url": "https://..."
+}
 ```
 
-### ☁️ Services Externes
-- Neon (DB)
-- Cloudinary (images)
-- Arcjet (sécurité)
-- Upstash Redis (rate limiting)
-- Render/Vercel (hébergement + cron)
-
 ---
 
-## 🐛 **Dépannage**
+## 📝 Licence
 
-| Problème | Vérification |
-|----------|--------------|
-| Erreur DB | `DATABASE_URL` correcte |
-| JWT invalide | `JWT_SECRET` et expiration |
-| Rate limiting | Config Upstash/Arcjet |
-| Upload image | Credentials Cloudinary |
-
-Logs détaillés en dev + health checks pour monitoring.
-
----
-
-## 🤝 **Contribution**
-
-1. Fork le projet  
-2. Crée une branche feature  
-3. Commit → Push → Pull Request ✨
-
----
-
-## 📄 **Licence**
-
-Projet sous licence **MIT**. Voir [LICENSE](./LICENSE).
-
----
-
-## 📞 **Support**
-
-- 📘 **Docs** : `/api-docs`  
-- 🐛 **Issues** : GitHub  
-- 💬 **Contact** : Équipe dev
-
----
-
-> 🧠 **Développé avec ❤️ pour une gestion financière intelligente et sécurisée**  
-> _“Une gestion financière transparente pour une vie sereine”_
+Projet sous licence **MIT**.
+ 

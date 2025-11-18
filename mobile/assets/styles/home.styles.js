@@ -25,8 +25,10 @@ export const styles = StyleSheet.create({
     alignItems: "center",
   },
   headerLogo: {
-    width: 75,
-    height: 75,
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    marginRight: 12,
   },
   welcomeContainer: {
     flex: 1,
@@ -79,52 +81,7 @@ export const styles = StyleSheet.create({
     shadowRadius: 2,
     elevation: 1,
   },
-  balanceCard: {
-    backgroundColor: COLORS.card,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 20,
-    shadowColor: COLORS.shadow,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  balanceTitle: {
-    fontSize: 16,
-    color: COLORS.textLight,
-    marginBottom: 8,
-  },
-  balanceAmount: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: COLORS.text,
-    marginBottom: 20,
-  },
-  balanceStats: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  balanceStatItem: {
-    flex: 1,
-    alignItems: "center",
-  },
-  statDivider: {
-    borderRightWidth: 1,
-    borderColor: COLORS.border,
-  },
-  balanceStatLabel: {
-    fontSize: 14,
-    color: COLORS.textLight,
-    marginBottom: 4,
-  },
-  balanceStatAmount: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
+  
   sectionTitle: {
     fontSize: 18,
     fontWeight: "600",
@@ -261,4 +218,5 @@ export const styles = StyleSheet.create({
   transactionsListContent: {
     paddingBottom: 20,
   },
+  
 });

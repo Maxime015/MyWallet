@@ -154,8 +154,12 @@ export async function deleteSubscription(req, res) {
     const { id } = req.params;
     const userId = req.user.id; // Récupéré du middleware d'authentification
 
-    if (isNaN(id) || parseInt(id) <= 0) {
-      return res.status(400).json({ message: 'ID d\'abonnement invalide' });
+    // Validation de l'ID (doit être un UUID valide)
+    if (!id || typeof id !== 'string') {
+      return res.status(400).json({ 
+        message: 'ID d\'abonnement invalide',
+        details: 'L\'ID doit être une chaîne de caractères valide'
+      });
     }
 
     // Récupérer l'abonnement avec vérification du propriétaire
@@ -163,12 +167,20 @@ export async function deleteSubscription(req, res) {
       SELECT image_url FROM subscriptions WHERE id = ${id} AND user_id = ${userId}`;
 
     if (!subscription) {
-      return res.status(404).json({ message: 'Abonnement non trouvé' });
+      return res.status(404).json({ 
+        message: 'Abonnement non trouvé',
+        details: 'L\'abonnement n\'existe pas ou vous n\'avez pas les permissions nécessaires'
+      });
     }
 
     // Supprimer l'image de Cloudinary si elle existe
     if (subscription.image_url) {
-      await deleteImageFromCloudinary(subscription.image_url);
+      try {
+        await deleteImageFromCloudinary(subscription.image_url);
+      } catch (cloudinaryError) {
+        console.warn('Erreur lors de la suppression de l\'image Cloudinary:', cloudinaryError);
+        // On continue même si la suppression d'image échoue
+      }
     }
 
     // Supprimer l'abonnement avec vérification du propriétaire
@@ -178,7 +190,10 @@ export async function deleteSubscription(req, res) {
       RETURNING *`;
 
     if (!deleted) {
-      return res.status(404).json({ message: 'Abonnement non trouvé' });
+      return res.status(404).json({ 
+        message: 'Abonnement non trouvé',
+        details: 'L\'abonnement n\'a pas pu être supprimé'
+      });
     }
 
     res.status(200).json({ 
@@ -187,9 +202,9 @@ export async function deleteSubscription(req, res) {
     });
 
   } catch (error) {
-    console.error('Erreur :', error);
+    console.error('Erreur lors de la suppression :', error);
     res.status(500).json({ 
-      message: error.message || 'Erreur interne du serveur',
+      message: 'Erreur interne du serveur lors de la suppression',
       ...(process.env.NODE_ENV !== 'production' && { error: error.message })
     });
   }

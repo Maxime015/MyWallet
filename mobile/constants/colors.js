@@ -75,7 +75,7 @@ export const THEMES = {
 };
 
 // 👇 Export nommé pour COLORS (manquant)
-export const COLORS = THEMES.ocean;
+export const COLORS = THEMES.forest;
 
 // Export par défaut pour éviter les problèmes d'import
-export default THEMES.ocean;
+export default THEMES.forest;

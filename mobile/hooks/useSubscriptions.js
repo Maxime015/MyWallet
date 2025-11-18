@@ -22,13 +22,16 @@ export const useSubscriptions = () => {
         },
       });
       
-      if (!response.ok) throw new Error("Failed to fetch subscriptions");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch subscriptions");
+      }
       
       const data = await response.json();
       setSubscriptions(data);
     } catch (error) {
       console.error("Error fetching subscriptions:", error);
-      Alert.alert("Error", "Failed to load subscriptions");
+      Alert.alert("Error", error.message || "Failed to load subscriptions");
     }
   }, [token]);
 
@@ -42,7 +45,10 @@ export const useSubscriptions = () => {
         },
       });
       
-      if (!response.ok) throw new Error("Failed to fetch subscriptions summary");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to fetch subscriptions summary");
+      }
       
       const data = await response.json();
       setSummary({
@@ -51,7 +57,7 @@ export const useSubscriptions = () => {
       });
     } catch (error) {
       console.error("Error fetching subscriptions summary:", error);
-      Alert.alert("Error", "Failed to load subscriptions summary");
+      Alert.alert("Error", error.message || "Failed to load subscriptions summary");
     }
   }, [token]);
 
@@ -91,7 +97,6 @@ export const useSubscriptions = () => {
       // Recharger les données après ajout
       await loadData();
       
-      Alert.alert("Success", "Subscription added successfully");
       return { success: true, data: data.subscription };
     } catch (error) {
       console.error("Error creating subscription:", error);
@@ -101,7 +106,10 @@ export const useSubscriptions = () => {
   };
 
   const deleteSubscription = async (id) => {
-    if (!token) return;
+    if (!token) {
+      Alert.alert("Error", "Authentication required");
+      return { success: false, error: "No authentication token" };
+    }
 
     try {
       const response = await fetch(`${API_URL}/subscriptions/${id}`, {
@@ -111,14 +119,22 @@ export const useSubscriptions = () => {
         },
       });
       
-      if (!response.ok) throw new Error("Failed to delete subscription");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to delete subscription");
+      }
 
+      const result = await response.json();
+      
       // Recharger les données après suppression
       await loadData();
-      Alert.alert("Success", "Subscription deleted successfully");
+      
+      Alert.alert("Success", result.message || "Subscription deleted successfully");
+      return { success: true, data: result };
     } catch (error) {
       console.error("Error deleting subscription:", error);
       Alert.alert("Error", error.message);
+      return { success: false, error: error.message };
     }
   };
 

@@ -1,4 +1,3 @@
-// db.js
 import { neon } from "@neondatabase/serverless";
 import "dotenv/config";
 import bcrypt from "bcryptjs";
@@ -8,10 +7,13 @@ export const sql = neon(process.env.DATABASE_URL);
 
 export async function initDB() {
   try {
+    // Extension pour UUID (nécessaire pour PostgreSQL)
+    await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
+
     // Table Users
     await sql`
       CREATE TABLE IF NOT EXISTS users (
-        id SERIAL PRIMARY KEY,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         username VARCHAR(255) NOT NULL UNIQUE,
         email VARCHAR(255) NOT NULL UNIQUE,
         password VARCHAR(255) NOT NULL,
@@ -21,49 +23,32 @@ export async function initDB() {
       )
     `;
 
-    // Table Budgets
-    await sql`
-      CREATE TABLE IF NOT EXISTS budgets (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        amount DECIMAL(10,2) NOT NULL,
-        category VARCHAR(255) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT budgets_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
-      )
-    `;
-
     // Table Transactions
     await sql`
       CREATE TABLE IF NOT EXISTS transactions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL, 
-        budget_id INTEGER,
-        description TEXT NOT NULL,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        user_id UUID NOT NULL,
+        title VARCHAR(255) NOT NULL,
         amount DECIMAL(10,2) NOT NULL,
         category VARCHAR(255) NOT NULL,
-        created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
+        created_at DATE NOT NULL DEFAULT CURRENT_DATE,
         CONSTRAINT transactions_user_id_fkey 
-          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
-        CONSTRAINT transactions_budget_id_fkey 
-          FOREIGN KEY (budget_id) REFERENCES budgets(id) ON DELETE CASCADE ON UPDATE CASCADE
+          FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
       )
     `;
 
     // Table Subscriptions
     await sql`
       CREATE TABLE IF NOT EXISTS subscriptions (
-        id SERIAL PRIMARY KEY,
-        user_id INTEGER NOT NULL,
+        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        user_id UUID NOT NULL,
         label VARCHAR(255) NOT NULL,
         amount NUMERIC(10, 2) NOT NULL, 
         date DATE NOT NULL,
         recurrence VARCHAR(50) NOT NULL,
         rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
         image_url VARCHAR(255),
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         CONSTRAINT subscriptions_user_id_fkey 
           FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE
       )`;

@@ -9,10 +9,10 @@ import protectRoute from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-// Routes 
-router.get('/:userId', protectRoute, getSubscriptionByUserId);
+// Routes corrigées - utilisation cohérente de req.user.id
+router.get('/', protectRoute, getSubscriptionByUserId);
 router.post('/', protectRoute, createSubscription);
 router.delete('/:id', protectRoute, deleteSubscription);
-router.get('/summary/:userId', protectRoute, getSummaryByUserId);
+router.get('/summary', protectRoute, getSummaryByUserId);
 
 export default router;

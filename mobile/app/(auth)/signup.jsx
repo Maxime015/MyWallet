@@ -1,18 +1,19 @@
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { MotiText, MotiView } from "moti";
+import { useState } from "react";
 import {
-  View,
-  Text,
-  Platform,
-  KeyboardAvoidingView,
-  TextInput,
-  TouchableOpacity,
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import styles from "../../assets/styles/signup.styles";
-import { Ionicons } from "@expo/vector-icons";
 import COLORS from "../../constants/colors";
-import { useState } from "react";
-import { useRouter } from "expo-router";
 import { useAuthStore } from "../../store/authStore";
 
 export default function Signup() {
@@ -21,13 +22,11 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  const { user, isLoading, register, token } = useAuthStore();
-
+  const { isLoading, register } = useAuthStore();
   const router = useRouter();
 
   const handleSignUp = async () => {
     const result = await register(username, email, password);
-
     if (!result.success) Alert.alert("Error", result.error);
   };
 
@@ -37,15 +36,45 @@ export default function Signup() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <View style={styles.container}>
-        <View style={styles.card}>
+        <MotiView
+          from={{ opacity: 0, translateY: -50 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: "timing", duration: 800 }}
+          style={styles.card}
+        >
           {/* HEADER */}
-          <View style={styles.header}>
-            <Text style={styles.title}>BookWorm🐛</Text>
-            <Text style={styles.subtitle}>Share your favorite reads</Text>
-          </View>
+          <MotiView
+            from={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", delay: 300 }}
+            style={styles.header}
+          >
+            <MotiText
+              from={{ opacity: 0, translateY: -10 }}
+              animate={{ opacity: 1, translateY: 0 }}
+              transition={{ delay: 400 }}
+              style={styles.title}
+            >
+              MyWallet 🐞
+            </MotiText>
+            <MotiText
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 600 }}
+              style={styles.subtitle}
+            >
+              Share your favorite reads
+            </MotiText>
+          </MotiView>
 
-          <View style={styles.formContainer}>
-            {/* USERNAME INPUT */}
+          {/* FORMULAIRE */}
+          <MotiView
+            from={{ opacity: 0, translateY: 60 }}
+            animate={{ opacity: 1, translateY: 0 }}
+            transition={{ type: "timing", duration: 800, delay: 500 }}
+            style={styles.formContainer}
+          >
+            {/* USERNAME */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Username</Text>
               <View style={styles.inputContainer}>
@@ -66,7 +95,7 @@ export default function Signup() {
               </View>
             </View>
 
-            {/* EMAIL INPUT */}
+            {/* EMAIL */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
               <View style={styles.inputContainer}>
@@ -79,8 +108,8 @@ export default function Signup() {
                 <TextInput
                   style={styles.input}
                   placeholder="johndoe@gmail.com"
-                  value={email}
                   placeholderTextColor={COLORS.placeholderText}
+                  value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
                   autoCapitalize="none"
@@ -88,7 +117,7 @@ export default function Signup() {
               </View>
             </View>
 
-            {/* PASSWORD INPUT */}
+            {/* PASSWORD */}
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <View style={styles.inputContainer}>
@@ -119,24 +148,40 @@ export default function Signup() {
               </View>
             </View>
 
-            {/* SIGNUP BUTTON */}
-            <TouchableOpacity style={styles.button} onPress={handleSignUp} disabled={isLoading}>
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign Up</Text>
-              )}
-            </TouchableOpacity>
+            {/* BOUTON ANIMÉ */}
+            <MotiView
+              from={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", delay: 800 }}
+            >
+              <TouchableOpacity
+                style={styles.button}
+                onPress={handleSignUp}
+                disabled={isLoading}
+                activeOpacity={0.8}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
+              </TouchableOpacity>
+            </MotiView>
 
             {/* FOOTER */}
-            <View style={styles.footer}>
+            <MotiView
+              from={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1000 }}
+              style={styles.footer}
+            >
               <Text style={styles.footerText}>Already have an account?</Text>
               <TouchableOpacity onPress={() => router.back()}>
                 <Text style={styles.link}>Login</Text>
               </TouchableOpacity>
-            </View>
-          </View>
-        </View>
+            </MotiView>
+          </MotiView>
+        </MotiView>
       </View>
     </KeyboardAvoidingView>
   );

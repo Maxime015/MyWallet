@@ -7,13 +7,33 @@ import { formatDate } from "../lib/utils";
 // Map categories to their respective icons
 const CATEGORY_ICONS = {
   "Food & Drinks": "fast-food",
-  Shopping: "cart",
-  Transportation: "car",
-  Entertainment: "film",
-  Bills: "receipt",
-  Income: "cash",
-  Other: "ellipsis-horizontal",
+  "Shopping": "cart",
+  "Transportation": "car",
+  "Entertainment": "film",
+  "Bills": "receipt",
+  "Income": "cash",
+  "Healthcare": "medical",
+  "Education": "school",
+  "Travel": "airplane",
+  "Groceries": "basket",
+  "Housing": "home",
+  "Utilities": "build",
+  "Insurance": "shield-checkmark",
+  "Personal Care": "body",
+  "Gifts & Donations": "gift",
+  "Investments": "trending-up",
+  "Savings": "wallet",
+  "Clothing": "shirt",
+  "Electronics": "phone-portrait",
+  "Sports & Fitness": "fitness",
+  "Pets": "paw",
+  "Kids & Baby": "happy",
+  "Subscriptions": "refresh",
+  "Taxes": "document-text",
+  "Business": "business",
+  "Other": "ellipsis-horizontal",
 };
+
 
 export const TransactionItem = ({ item, onDelete }) => {
   const isIncome = parseFloat(item.amount) > 0;

@@ -1,6 +1,7 @@
 import { sql, hashPassword, comparePassword } from '../config/db.js';
 import rateLimit from 'express-rate-limit';
 import jwt from 'jsonwebtoken';
+import { sendWelcomeEmail } from "../emails/emailHandlers.js";
 
 // Fonction pour générer un token JWT
 const generateToken = (userId) => {
@@ -60,6 +61,8 @@ export const register = async (req, res) => {
       RETURNING id, username, email, profile_image, created_at
     `;
 
+    if (newUser) {
+
     const token = generateToken(newUser[0].id);
 
     res.status(201).json({
@@ -73,6 +76,17 @@ export const register = async (req, res) => {
         createdAt: newUser[0].created_at,
       },
     });
+
+      try {
+        await sendWelcomeEmail(newUser[0].email, newUser[0].username);
+      } catch (error) {
+        console.error("Failed to send welcome email:", error);
+      }
+
+    } else {
+      res.status(400).json({ message: "Invalid user data" });
+    }
+
   } catch (error) {
     console.error("Erreur dans la route d’inscription :", error);
     res.status(500).json({ message: "Erreur interne du serveur." });
@@ -117,27 +131,6 @@ export const login = async (req, res) => {
     });
   } catch (error) {
     console.error("Erreur dans la route de connexion :", error);
-    res.status(500).json({ message: "Erreur interne du serveur." });
-  }
-};
-
-// 🖼️ Récupération des images de profil des utilisateurs
-export const getAllProfileImages = async (req, res) => {
-  try {
-    // Récupérer uniquement les noms d'utilisateur et leurs images de profil
-    const users = await sql`
-      SELECT username, profile_image FROM users
-    `;
-
-    res.status(200).json({
-      message: "Images de profil récupérées avec succès.",
-      users: users.map(user => ({
-        username: user.username,
-        profileImage: user.profile_image
-      }))
-    });
-  } catch (error) {
-    console.error("Erreur lors de la récupération des images de profil :", error);
     res.status(500).json({ message: "Erreur interne du serveur." });
   }
 };
